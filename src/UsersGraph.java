@@ -39,11 +39,11 @@ public class UsersGraph {
 	public boolean checkLikesNumber(int total) {
 		return total==likes_number+shared_likes ? true : false ;
 	}
-			
 	/*****************************************************************************/
 
 
-	public Graph getGraph() { return graph ; } 
+	public Graph getGraph() { return graph ; }
+	
 	public UsersGraph() {
 		graph = new TinkerGraph();
 		
@@ -92,24 +92,24 @@ public class UsersGraph {
 			shared_users++;
 		}
 		
-		setProperty(v_user,"whoami", "user");
+		setProperty(v_user,UserTags.WHOAMI, "user");
 		
-		/* !!!should be used a final class with tag members */
+		
 		// !!!setProperty(v_user,"ide", user.getId()); not necessary because of addVertex(user.getId())
 		
 		setProperty(v_user,"isDAU", user.isDAU());
-		setProperty(v_user,"gender", user.getGender());
-		setProperty(v_user,"birthday", user.getBirthday());
-		setProperty(v_user,"relationship_status", user.getRelationship_status());
-		setProperty(v_user,"interested_in", user.getInterested_in());
+		setProperty(v_user,UserTags.GENDER, user.getGender());
+		setProperty(v_user,UserTags.BIRTHDAY, user.getBirthday());
+		setProperty(v_user,UserTags.REL_STATUS, user.getRelationship_status());
+		setProperty(v_user,UserTags.INTERESTED_IN, user.getInterested_in());
 		
 		//!!!only id is used
 		if (user.getHometown()!=null)
-			setProperty(v_user,"hometown", user.getHometown().getId());
+			setProperty(v_user,UserTags.HOMETOWN, user.getHometown().getId());
 		
 		//!!!only id is used
 		if (user.getLocation()!=null)
-			setProperty(v_user,"location", user.getLocation().getId());
+			setProperty(v_user,UserTags.LOCATION, user.getLocation().getId());
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
@@ -136,8 +136,8 @@ public class UsersGraph {
 					likes_number++;
 					//setProperty(v_like, "ide", like.getId());
 					
-					setProperty(v_like, "name", like.getName());
-					setProperty(v_like, "category", like.getCategory());
+					setProperty(v_like, UserTags.NAME, like.getName());
+					setProperty(v_like, UserTags.CATEGORY, like.getCategory());
 					
 					try {
 						String cat_list  = new String();
@@ -145,10 +145,10 @@ public class UsersGraph {
 						for (CoupleNameId cni : like.getCategory_list())
 							cat_list += cni.getId() + ",";
 						cat_list = cat_list.substring(0, cat_list.length()-1);	
-						setProperty(v_like,"category_list", cat_list);
+						setProperty(v_like,UserTags.CATEGORY_LIST, cat_list);
 					} catch(NullPointerException e) { }
 					
-					setProperty(v_like,"whoami", "like");
+					setProperty(v_like,UserTags.WHOAMI, "like");
 					
 				} catch (IllegalArgumentException e) { 
 					v_like = graph.getVertex(like.getId());
@@ -172,7 +172,7 @@ public class UsersGraph {
 		int user_count=0, likes_count=0;
 		EUser u;
 		for (File f : files) {
-			JsonUser j = new  JsonUser(f.getAbsolutePath());
+			JsonPuker j = new  JsonPuker(f.getAbsolutePath());
 			u = j.getEUser();
 			g.addUser(u);
 			
@@ -188,11 +188,11 @@ public class UsersGraph {
 		}
 		
 
+		System.out.println("\n--------------------------DEBUG--------------------------");
+		
 		Graph graph = g.getGraph();
 		Collection<Vertex> vertex_coll = (Collection<Vertex>)graph.getVertices();
 		Collection<Edge> edge_coll = (Collection<Edge>)graph.getEdges();
-		
-		System.out.println("\n--------------------------DEBUG--------------------------");
 		
 		if (g.checkLikesNumber(likes_count))
 			System.out.println("likes number OK");
