@@ -185,6 +185,7 @@ class UserTags {
 	public final static String LOCATION = "location";
 	public final static String NAME = "name";
 	public final static String FRIENDS = "friends";
+	public final static String FRIEND = "friend";
 	public final static String MUTUALFRIENDS = "mutualfriends";
 	public final static String LIKES = "likes";
 	public final static String CATEGORY = "category";
@@ -194,5 +195,6 @@ class UserTags {
 	public final static String YEAR = "year";
 	public final static String TYPE = "type";
 	public final static String WHOAMI = "whoami";
+	public final static String ISDAU = "is_dau";
 	
 }

@@ -12,6 +12,40 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
+/**
+ * 
+ * The UsersGraph class creates a users graph in which
+ * there are two types of node:
+ * 1.  user node
+ * 2.  like node
+ * 
+ * The first one has the follow properties (see UserTags class in UserUtility.java)
+ *    
+ *    . WHOAMI        . REL_STATUS
+ *    . ISDAU         . INTERESTED_IN
+ *    . GENDER        . HOMETOWN
+ *    . BIRTHDAY      . LOCATION
+ *    . blueprintsId  (the blueprintsId is available with Vertex.getId function) 
+ *  
+ *    
+ * and the following (undirected) edges:
+ *    . FRIEND 
+ *    . LIKES
+ *    
+ * The FRIEND edges link a user node with another usernode. On the other hand
+ * the LIKES edges link a user node with a like node.
+ * 
+ * A like node has the follow properties:
+ * 
+ *    . WHOAMI        . NAME
+ *    . CATEGORY      . CATEGORY_LIST
+ *    . blueprintsId  (the blueprintsId is available with Vertex.getId function)
+ * 
+ * The CATEGORY_LIST is a comma separated list of category unique identifiers.
+ * 
+ * 
+ *    
+ * */
 
 public class UsersGraph {
 
@@ -41,14 +75,9 @@ public class UsersGraph {
 	}
 	/*****************************************************************************/
 
-
-	public Graph getGraph() { return graph ; }
+	public UsersGraph() { graph = new TinkerGraph(); }
 	
-	public UsersGraph() {
-		graph = new TinkerGraph();
-		
-	}
-
+	public Graph getGraph() { return graph ; }
 	
 	/**
 	 * 
@@ -73,7 +102,15 @@ public class UsersGraph {
 	 * <br>
 	 * NB: The addVertex function throws a IllegalArgumentExeception
 	 *     when an already-in vertex has been added.
-	 *     
+	 * <br>
+	 * The general idea is:
+	 *    . get the 'user'
+	 *    . set gender, birthday,isDau,etc. properties
+	 *    . get its friends
+	 *       . create an edge from the 'user' to a new friend node
+	 *     . get its likes
+	 *       . create an edge from the 'user' to a new like node
+	 *    
 	 * @param user, the user to be added
 	 * @return the updated graph
 	 * 
@@ -86,7 +123,7 @@ public class UsersGraph {
 			v_user = graph.addVertex(user.getId());
 			users_number++;
 		} catch(IllegalArgumentException e) {		
-			System.out.println(user.getId() + ": already in!");
+			//System.out.println(user.getId() + ": already in!"); //DEBUG
 			graph.removeVertex(graph.getVertex(user.getId()));
 			v_user = graph.addVertex(user.getId());
 			shared_users++;
@@ -94,10 +131,9 @@ public class UsersGraph {
 		
 		setProperty(v_user,UserTags.WHOAMI, "user");
 		
-		
 		// !!!setProperty(v_user,"ide", user.getId()); not necessary because of addVertex(user.getId())
 		
-		setProperty(v_user,"isDAU", user.isDAU());
+		setProperty(v_user,UserTags.ISDAU, user.isDAU());
 		setProperty(v_user,UserTags.GENDER, user.getGender());
 		setProperty(v_user,UserTags.BIRTHDAY, user.getBirthday());
 		setProperty(v_user,UserTags.REL_STATUS, user.getRelationship_status());
@@ -122,7 +158,7 @@ public class UsersGraph {
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
 				}
-				graph.addEdge(null, v_user, v_friend, "friend");
+				graph.addEdge(null, v_user, v_friend, UserTags.FRIEND);
 			}
 		}
 			
@@ -154,7 +190,7 @@ public class UsersGraph {
 					v_like = graph.getVertex(like.getId());
 					shared_likes++;
 				}
-				graph.addEdge(null, v_user, v_like, "likes");
+				graph.addEdge(null, v_user, v_like, UserTags.LIKES);
 			}
 		}
 		
@@ -163,7 +199,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/jxx");
+		File inputFolder = new File("/home/np2k/Desktop/json_user");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
