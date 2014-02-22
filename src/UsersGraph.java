@@ -103,9 +103,11 @@ public class UsersGraph {
 		setProperty(v_user,"relationship_status", user.getRelationship_status());
 		setProperty(v_user,"interested_in", user.getInterested_in());
 		
+		//!!!only id is used
 		if (user.getHometown()!=null)
 			setProperty(v_user,"hometown", user.getHometown().getId());
 		
+		//!!!only id is used
 		if (user.getLocation()!=null)
 			setProperty(v_user,"location", user.getLocation().getId());
 		
@@ -129,6 +131,7 @@ public class UsersGraph {
 			Vertex v_like;
 			for (ELike like : user.getLikes()) {			
 				try {
+					//!!!only id is used
 					v_like = graph.addVertex(like.getId());
 					likes_number++;
 					//setProperty(v_like, "ide", like.getId());
@@ -138,6 +141,7 @@ public class UsersGraph {
 					
 					try {
 						String cat_list  = new String();
+						//!!!only id is used
 						for (CoupleNameId cni : like.getCategory_list())
 							cat_list += cni.getId() + ",";
 						cat_list = cat_list.substring(0, cat_list.length()-1);	
