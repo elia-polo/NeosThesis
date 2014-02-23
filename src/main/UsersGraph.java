@@ -1,7 +1,6 @@
-import java.io.BufferedOutputStream;
+package main;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -9,41 +8,39 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
-import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
 /**
  * 
  * The UsersGraph class creates a users graph in which
  * there are two types of node:
- * 1.  user node
- * 2.  like node
+ * <ol>
+ * <li>user node
+ * <li>like node
+ * </ol>
  * 
  * The first one has the follow properties (see UserTags class in UserUtility.java)
- *    
- *    . WHOAMI        . REL_STATUS
- *    . ISDAU         . INTERESTED_IN
- *    . GENDER        . HOMETOWN
- *    . BIRTHDAY      . LOCATION
- *    . blueprintsId  (the blueprintsId is available with Vertex.getId function) 
- *  
+ * <ul>
+ * <li>WHOAMI</li><li>REL_STATUS</li><li>ISDAU</li><li>INTERESTED_IN</li><li>GENDER</li><li>HOMETOWN</li><li>BIRTHDAY</li><li>LOCATION</li><li>blueprintsId  (the blueprintsId is available with Vertex.getId function) </li>
+ * </ul> 
  *    
  * and the following (undirected) edges:
- *    . FRIEND 
- *    . LIKES
- *    
+ * <ul>
+ * <li>FRIEND</li> 
+ * <li>LIKES</li>
+ * </ul>
  * The FRIEND edges link a user node with another usernode. On the other hand
  * the LIKES edges link a user node with a like node.
  * 
  * A like node has the follow properties:
- * 
- *    . WHOAMI        . NAME
- *    . CATEGORY      . CATEGORY_LIST
- *    . blueprintsId  (the blueprintsId is available with Vertex.getId function)
- * 
+ * <ul>
+ * <li>WHOAMI</li>
+ * <li>NAME</li>
+ * <li>CATEGORY</li>
+ * <li>CATEGORY_LIST</li>
+ * <li>blueprintsId  (the blueprintsId is available with Vertex.getId function)</li>
+ * </ul>
  * The CATEGORY_LIST is a comma separated list of category unique identifiers.
- * 
- * 
  *    
  * */
 
@@ -81,10 +78,10 @@ public class UsersGraph {
 	
 	/**
 	 * 
-	 * Vertex.setProperty faÃ§ade
-	 * @param v, vertex to which set the properties 
-	 * @param name, properties name
-	 * @param o, properties value
+	 * Vertex.setProperty façade
+	 * @param v vertex to which set the properties 
+	 * @param name properties name
+	 * @param o properties value
 	 * 
 	 * @return void
 	 *  
@@ -98,20 +95,20 @@ public class UsersGraph {
 	}
 
 	/**
-	 * add an EUser (see UserUtility.java) to the usersGraph<br>
-	 * <br>
+	 * <p>Add an EUser (see UserUtility.java) to the usersGraph</p>
 	 * NB: The addVertex function throws a IllegalArgumentExeception
 	 *     when an already-in vertex has been added.
 	 * <br>
 	 * The general idea is:
-	 *    . get the 'user'
-	 *    . set gender, birthday,isDau,etc. properties
-	 *    . get its friends
-	 *       . create an edge from the 'user' to a new friend node
-	 *     . get its likes
-	 *       . create an edge from the 'user' to a new like node
-	 *    
-	 * @param user, the user to be added
+	 * <ol>
+	 * <li>get the 'user'</li>
+	 * <li>set gender, birthday,isDau,etc. properties</li>
+	 * <li>get its friends</li>
+	 * <ul><li>create an edge from the 'user' to a new friend node</li></ul>
+	 * <li>get its likes</li>
+	 * <ul><li>create an edge from the 'user' to a new like node</li></ul>
+	 * </ol>
+	 * @param user the user to be added
 	 * @return the updated graph
 	 * 
 	 * */
