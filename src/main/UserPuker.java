@@ -10,14 +10,14 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
-class JsonPuker {
+class UserPuker {
 	
 	private String json_file;
 	private JsonObject jsonObj;
 	private EUser user;
 	
 	
-	JsonPuker(String filename) throws FileNotFoundException, IOException {
+	UserPuker(String filename) throws FileNotFoundException, IOException {
 		
 		json_file = filename;
 		user = new EUser();
@@ -44,10 +44,10 @@ class JsonPuker {
 		 * specified tag doesn't exist in the json object .
 		 * */
 		
-		user.setId(jsonObj.get_str_value(UserTags.ID));
-		user.setGender(jsonObj.get_str_value(UserTags.GENDER));
-		user.setRelationship_status(jsonObj.get_str_value(UserTags.REL_STATUS));
-		user.setBirthday(jsonObj.get_str_value(UserTags.BIRTHDAY));
+		user.setId(jsonObj.get_str_value(UserUtility.ID));
+		user.setGender(jsonObj.get_str_value(UserUtility.GENDER));
+		user.setRelationship_status(jsonObj.get_str_value(UserUtility.REL_STATUS));
+		user.setBirthday(jsonObj.get_str_value(UserUtility.BIRTHDAY));
 		
 		/*
 		 * checks if interested_in exists, in that case 
@@ -55,7 +55,7 @@ class JsonPuker {
 		 * */
 		
 		try {
-			user.setInterested_in(jsonObj.get(UserTags.INTERESTED_IN).asArray().get(0).asString());
+			user.setInterested_in(jsonObj.get(UserUtility.INTERESTED_IN).asArray().get(0).asString());
 		} catch(NullPointerException e) {
 			user.setInterested_in(null);
 		}
@@ -64,7 +64,7 @@ class JsonPuker {
 		try {
 			/* creates an education array */
 			
-			JsonArray edu_array = jsonObj.get(UserTags.EDUCATION).asArray();
+			JsonArray edu_array = jsonObj.get(UserUtility.EDUCATION).asArray();
 			
 			ArrayList<EEducation> edu_list = new ArrayList<EEducation>();
 			
@@ -74,16 +74,16 @@ class JsonPuker {
 				EEducation edu = new EEducation();
 				
 				/* set edu 'type' fields */
-				edu.setType(single_edu.asObject().get_str_value(UserTags.TYPE));
+				edu.setType(single_edu.asObject().get_str_value(UserUtility.TYPE));
 				
 				/* if exists 'school' fields... */
 				try {
-					edu.setName_id(new CoupleNameId(single_edu.asObject().get(UserTags.SCHOOL).asObject().get_str_value(UserTags.NAME),
-								   single_edu.asObject().get(UserTags.SCHOOL).asObject().get_str_value(UserTags.ID)));
+					edu.setName_id(new CoupleNameId(single_edu.asObject().get(UserUtility.SCHOOL).asObject().get_str_value(UserUtility.NAME),
+								   single_edu.asObject().get(UserUtility.SCHOOL).asObject().get_str_value(UserUtility.ID)));
 				} catch (NullPointerException e) { edu.setName_id(null); }
 				
 				try  {
-					edu.setYear(single_edu.asObject().get(UserTags.YEAR).asObject().get_str_value(UserTags.NAME));
+					edu.setYear(single_edu.asObject().get(UserUtility.YEAR).asObject().get_str_value(UserUtility.NAME));
 				} catch (NullPointerException e) { edu.setYear(null); }
 				
 				edu_list.add(edu);
@@ -96,18 +96,18 @@ class JsonPuker {
 		CoupleNameId where = new CoupleNameId();
 		
 		try {
-		    where_obj = jsonObj.get(UserTags.HOMETOWN);
-			where.setId(where_obj.asObject().get_str_value(UserTags.ID));
-			where.setName(where_obj.asObject().get_str_value(UserTags.NAME));
+		    where_obj = jsonObj.get(UserUtility.HOMETOWN);
+			where.setId(where_obj.asObject().get_str_value(UserUtility.ID));
+			where.setName(where_obj.asObject().get_str_value(UserUtility.NAME));
 			user.setHometown(where);
 		} catch (NullPointerException e) { user.setHometown(null); }
 		
 		where = new CoupleNameId();
 		
 		try { 
-			where_obj = jsonObj.get(UserTags.LOCATION);
-			where.setId(where_obj.asObject().get_str_value(UserTags.ID));
-			where.setName(where_obj.asObject().get_str_value(UserTags.NAME));
+			where_obj = jsonObj.get(UserUtility.LOCATION);
+			where.setId(where_obj.asObject().get_str_value(UserUtility.ID));
+			where.setName(where_obj.asObject().get_str_value(UserUtility.NAME));
 			user.setLocation(where);
 		} catch(NullPointerException e) { user.setLocation(null); }
 		
@@ -115,8 +115,8 @@ class JsonPuker {
 		JsonObject friends_obj;
 		
 		String fr;
-		if (user.isDAU()==true) fr = UserTags.FRIENDS;
-		else fr = UserTags.MUTUALFRIENDS;
+		if (user.isDAU()==true) fr = UserUtility.FRIENDS;
+		else fr = UserUtility.MUTUALFRIENDS;
 		
 		try {
 
@@ -125,7 +125,7 @@ class JsonPuker {
 			ArrayList<String> friends_id = new ArrayList<String>();
 			
 			for (JsonValue f : friends)
-				friends_id.add(f.asObject().get_str_value(UserTags.ID));
+				friends_id.add(f.asObject().get_str_value(UserUtility.ID));
 		
 			user.setFriends(friends_id);
 		} catch (NullPointerException e) { user.setFriends(null); }
@@ -137,7 +137,7 @@ class JsonPuker {
 		/* if exists likes tag */
 		try 
 		{
-			likes_obj = jsonObj.get(UserTags.LIKES).asObject();
+			likes_obj = jsonObj.get(UserUtility.LIKES).asObject();
 			
 			/* JSON likes array */
 			JsonArray likes = likes_obj.get("data").asArray();
@@ -151,13 +151,13 @@ class JsonPuker {
 				/* single like */
 				ELike like = new ELike();
 				
-				like.setId(l.asObject().get_str_value(UserTags.ID));
-				like.setCategory(l.asObject().get_str_value(UserTags.CATEGORY));
-				like.setName(l.asObject().get_str_value(UserTags.NAME));				
+				like.setId(l.asObject().get_str_value(UserUtility.ID));
+				like.setCategory(l.asObject().get_str_value(UserUtility.CATEGORY));
+				like.setName(l.asObject().get_str_value(UserUtility.NAME));				
 				
 				try  {
 					/* JSON category list array */
-					JsonArray cl = l.asObject().get(UserTags.CATEGORY_LIST).asArray();
+					JsonArray cl = l.asObject().get(UserUtility.CATEGORY_LIST).asArray();
 					
 					/* with this cat_list must be filled the 'like' object */
 					ArrayList<CoupleNameId> cat_list = new ArrayList<CoupleNameId>();
@@ -165,8 +165,8 @@ class JsonPuker {
 					/* filling out the cat_list array with the entries
 					 * from json category list array */
 					for (JsonValue c : cl) 
-						cat_list.add(new CoupleNameId(c.asObject().get_str_value(UserTags.NAME), 
-								c.asObject().get_str_value(UserTags.ID)));
+						cat_list.add(new CoupleNameId(c.asObject().get_str_value(UserUtility.NAME), 
+								c.asObject().get_str_value(UserUtility.ID)));
 			
 					like.setCategory_list(cat_list);
 				} catch (NullPointerException e) { like.setCategory_list(null); }
@@ -187,7 +187,7 @@ class JsonPuker {
 			count++;
 			String name = fn.getAbsolutePath();
 			System.out.println(name);
-			JsonPuker ju = new JsonPuker(name);
+			UserPuker ju = new UserPuker(name);
 			EUser e = ju.getEUser();
 			System.out.println("ID: " + e.getId());
 			System.out.println("isDAU: " + e.isDAU());

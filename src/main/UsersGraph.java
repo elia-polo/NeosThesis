@@ -21,7 +21,9 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
  * 
  * The first one has the follow properties (see UserTags class in UserUtility.java)
  * <ul>
- * <li>WHOAMI</li><li>REL_STATUS</li><li>ISDAU</li><li>INTERESTED_IN</li><li>GENDER</li><li>HOMETOWN</li><li>BIRTHDAY</li><li>LOCATION</li><li>blueprintsId  (the blueprintsId is available with Vertex.getId function) </li>
+ * <li>WHOAMI</li><li>REL_STATUS</li><li>ISDAU</li><li>INTERESTED_IN</li><li>GENDER</li>
+ * <li>HOMETOWN</li><li>BIRTHDAY</li><li>LOCATION</li>
+ * <li>blueprintsId(the blueprintsId is available with Vertex.getId function) </li>
  * </ul> 
  *    
  * and the following (undirected) edges:
@@ -78,7 +80,7 @@ public class UsersGraph {
 	
 	/**
 	 * 
-	 * Vertex.setProperty façade
+	 * Vertex.setProperty faï¿½ade
 	 * @param v vertex to which set the properties 
 	 * @param name properties name
 	 * @param o properties value
@@ -126,23 +128,23 @@ public class UsersGraph {
 			shared_users++;
 		}
 		
-		setProperty(v_user,UserTags.WHOAMI, "user");
+		setProperty(v_user,UserUtility.WHOAMI, "user");
 		
 		// !!!setProperty(v_user,"ide", user.getId()); not necessary because of addVertex(user.getId())
 		
-		setProperty(v_user,UserTags.ISDAU, user.isDAU());
-		setProperty(v_user,UserTags.GENDER, user.getGender());
-		setProperty(v_user,UserTags.BIRTHDAY, user.getBirthday());
-		setProperty(v_user,UserTags.REL_STATUS, user.getRelationship_status());
-		setProperty(v_user,UserTags.INTERESTED_IN, user.getInterested_in());
+		setProperty(v_user,UserUtility.ISDAU, user.isDAU());
+		setProperty(v_user,UserUtility.GENDER, user.getGender());
+		setProperty(v_user,UserUtility.BIRTHDAY, user.getBirthday());
+		setProperty(v_user,UserUtility.REL_STATUS, user.getRelationship_status());
+		setProperty(v_user,UserUtility.INTERESTED_IN, user.getInterested_in());
 		
 		//!!!only id is used
 		if (user.getHometown()!=null)
-			setProperty(v_user,UserTags.HOMETOWN, user.getHometown().getId());
+			setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId());
 		
 		//!!!only id is used
 		if (user.getLocation()!=null)
-			setProperty(v_user,UserTags.LOCATION, user.getLocation().getId());
+			setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId());
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
@@ -155,7 +157,7 @@ public class UsersGraph {
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
 				}
-				graph.addEdge(null, v_user, v_friend, UserTags.FRIEND);
+				graph.addEdge(null, v_user, v_friend, UserUtility.FRIEND);
 			}
 		}
 			
@@ -169,8 +171,8 @@ public class UsersGraph {
 					likes_number++;
 					//setProperty(v_like, "ide", like.getId());
 					
-					setProperty(v_like, UserTags.NAME, like.getName());
-					setProperty(v_like, UserTags.CATEGORY, like.getCategory());
+					setProperty(v_like, UserUtility.NAME, like.getName());
+					setProperty(v_like, UserUtility.CATEGORY, like.getCategory());
 					
 					try {
 						String cat_list  = new String();
@@ -178,16 +180,16 @@ public class UsersGraph {
 						for (CoupleNameId cni : like.getCategory_list())
 							cat_list += cni.getId() + ",";
 						cat_list = cat_list.substring(0, cat_list.length()-1);	
-						setProperty(v_like,UserTags.CATEGORY_LIST, cat_list);
+						setProperty(v_like,UserUtility.CATEGORY_LIST, cat_list);
 					} catch(NullPointerException e) { }
 					
-					setProperty(v_like,UserTags.WHOAMI, "like");
+					setProperty(v_like,UserUtility.WHOAMI, "like");
 					
 				} catch (IllegalArgumentException e) { 
 					v_like = graph.getVertex(like.getId());
 					shared_likes++;
 				}
-				graph.addEdge(null, v_user, v_like, UserTags.LIKES);
+				graph.addEdge(null, v_user, v_like, UserUtility.LIKES);
 			}
 		}
 		
@@ -204,8 +206,9 @@ public class UsersGraph {
 		int i=0;
 		int user_count=0, likes_count=0;
 		EUser u;
+		UserPuker j;
 		for (File f : files) {
-			JsonPuker j = new  JsonPuker(f.getAbsolutePath());
+			j = new  UserPuker(f.getAbsolutePath());
 			u = j.getEUser();
 			g.addUser(u);
 			

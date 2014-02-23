@@ -1,6 +1,29 @@
 package main;
 import java.util.ArrayList;
 
+public class UserUtility {
+	public final static String ID = "id";
+	public final static String GENDER = "gender";
+	public final static String REL_STATUS = "relationship_status";
+	public final static String INTERESTED_IN = "interested_in";
+	public final static String BIRTHDAY = "birthday";
+	public final static String HOMETOWN = "hometown";
+	public final static String LOCATION = "location";
+	public final static String NAME = "name";
+	public final static String FRIENDS = "friends";
+	public final static String FRIEND = "friend";
+	public final static String MUTUALFRIENDS = "mutualfriends";
+	public final static String LIKES = "likes";
+	public final static String CATEGORY = "category";
+	public final static String CATEGORY_LIST = "category_list";
+	public final static String EDUCATION = "education";
+	public final static String SCHOOL = "school";
+	public final static String YEAR = "year";
+	public final static String TYPE = "type";
+	public final static String WHOAMI = "whoami";
+	public final static String ISDAU = "is_dau";	
+}
+
 class EUser {
 	/* json user field */
 	private String id;
@@ -174,28 +197,4 @@ class CoupleNameId {
 		this.name = name;
 		this.id = id;
 	}
-}
-
-class UserTags {
-	public final static String ID = "id";
-	public final static String GENDER = "gender";
-	public final static String REL_STATUS = "relationship_status";
-	public final static String INTERESTED_IN = "interested_in";
-	public final static String BIRTHDAY = "birthday";
-	public final static String HOMETOWN = "hometown";
-	public final static String LOCATION = "location";
-	public final static String NAME = "name";
-	public final static String FRIENDS = "friends";
-	public final static String FRIEND = "friend";
-	public final static String MUTUALFRIENDS = "mutualfriends";
-	public final static String LIKES = "likes";
-	public final static String CATEGORY = "category";
-	public final static String CATEGORY_LIST = "category_list";
-	public final static String EDUCATION = "education";
-	public final static String SCHOOL = "school";
-	public final static String YEAR = "year";
-	public final static String TYPE = "type";
-	public final static String WHOAMI = "whoami";
-	public final static String ISDAU = "is_dau";
-	
 }
