@@ -150,6 +150,7 @@ public class UsersGraph {
 		/* friends list */
 		if (user.getFriends()!=null) {
 			Vertex v_friend;
+			String edge_id;
 			for (String f_id : user.getFriends()) { 
 				try {
 					v_friend = graph.addVertex(f_id);
@@ -161,20 +162,17 @@ public class UsersGraph {
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
 				}
-				
-				String edge_id;
-				/*
-				 * create an unique id for the edge between a user and its
-				 * friend
-				 */
-				if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0)
-					edge_id = v_user.getId().toString() + "-"+ v_friend.getId().toString();
+					
+				/* create an unique id for the edge between a user and its friend */
+				if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0) 
+					edge_id = v_user.getId().toString()+ "-" + v_friend.getId().toString();
 				else
-					edge_id = v_friend.getId().toString() + "-"+ v_user.getId().toString();
+					edge_id = v_friend.getId().toString() + "-" + v_user.getId().toString() ;
+				
 				try {
 					graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
-				} catch (IllegalArgumentException e) { /* do nothing */
-				}
+				} catch (IllegalArgumentException e) { /* do nothing */ }
+
 			}
 		}
 			
