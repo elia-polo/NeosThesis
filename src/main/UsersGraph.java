@@ -1,13 +1,19 @@
 package main;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.activity.InvalidActivityException;
+
+import com.tinkerpop.blueprints.Compare;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
+import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
 /**
@@ -123,8 +129,7 @@ public class UsersGraph {
 			users_number++;
 		} catch(IllegalArgumentException e) {		
 			//System.out.println(user.getId() + ": already in!"); //DEBUG
-			graph.removeVertex(graph.getVertex(user.getId()));
-			v_user = graph.addVertex(user.getId());
+			v_user = graph.getVertex(user.getId());
 			shared_users++;
 		}
 		
@@ -149,16 +154,29 @@ public class UsersGraph {
 		/* friends list */
 		if (user.getFriends()!=null) {
 			Vertex v_friend;
+			String edge_id;
 			for (String f_id : user.getFriends()) { 
 				try {
 					v_friend = graph.addVertex(f_id);
+					//v_friend.setProperty(UserUtility.WHOAMI, "user");
 					users_number++;
 				} catch (IllegalArgumentException e) { 
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
 				}
-				graph.addEdge(null, v_user, v_friend, UserUtility.FRIEND);
+					
+				/* create an unique id for the edge between a user and its friend */
+				if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0) 
+					edge_id = v_user.getId().toString()+ "-" + v_friend.getId().toString();
+				else
+					edge_id = v_friend.getId().toString() + "-" + v_user.getId().toString() ;
+				
+				try {
+					graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
+				} catch (IllegalArgumentException e) { /* do nothing */ }
+
 			}
+			
 		}
 			
 		/* likes list */
@@ -198,7 +216,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/json_user");
+		File inputFolder = new File("/home/np2k/Desktop/jx");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
@@ -223,6 +241,7 @@ public class UsersGraph {
 			i++;
 		}
 		
+		
 
 		System.out.println("\n--------------------------DEBUG--------------------------");
 		
@@ -244,7 +263,7 @@ public class UsersGraph {
 		else
 			System.out.println("#graph vertex == #user+#likes!!!!!!");
 
-		/*File output_net = new File("/home/np2k/Desktop", "net.gml");
+		File output_net = new File("/home/np2k/Desktop", "net.gml");
 		
 		BufferedOutputStream bos;
 		try {
@@ -255,7 +274,7 @@ public class UsersGraph {
 			return;
 		}
 
-		GMLWriter.outputGraph(graph,bos);*/
+		GMLWriter.outputGraph(graph,bos);
 				
 		System.out.println("\nnodes number: " + vertex_coll.size());
 		System.out.println("edge number: " + edge_coll.size());
