@@ -24,7 +24,7 @@ public class NetClusConverter implements Converter {
 
 	private static final int male = 0;
 	private static final int female = 1;
-	
+	private static final String asset_folder = "./assets/Netclus/";
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the NetClus clustering algorithm:
 	 * <ul>
@@ -39,6 +39,9 @@ public class NetClusConverter implements Converter {
 	 * @param g The UsersGraph to be converted
 	 */
 	public void translate(UsersGraph g) {
+		long start_time = System.currentTimeMillis();
+		// Clear folder
+		for(File file: new File(asset_folder).listFiles()) file.delete();
 		// Maps for remapping dataset values with unique integer keys
 		HashMap<Integer, Integer> age_map = new HashMap<Integer,Integer>();
 		HashMap<String, Integer> hometown_map = new HashMap<String, Integer>();
@@ -46,86 +49,85 @@ public class NetClusConverter implements Converter {
 		HashMap<String, Integer> interested_in_map = new HashMap<String, Integer>(); // TODO replace with unwrapped mapping, as gender (no more than 3 values)
 		HashMap<String, Integer> relationship_map = new HashMap<String, Integer>();
 		HashMap<String, Integer> like_map = new HashMap<String, Integer>();
-		try (BufferedWriter users = Files.newBufferedWriter(Paths.get("users.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2birthday = Files.newBufferedWriter(Paths.get("user2birthday.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2hometown = Files.newBufferedWriter(Paths.get("user2hometown.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2location = Files.newBufferedWriter(Paths.get("user2location.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2gender = Files.newBufferedWriter(Paths.get("user2gender.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2interest = Files.newBufferedWriter(Paths.get("user2interest.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2relationship = Files.newBufferedWriter(Paths.get("user2relationship.txt"), StandardCharsets.UTF_8);
-				BufferedWriter user2like = Files.newBufferedWriter(Paths.get("user2like.txt"), StandardCharsets.UTF_8)) {
+		try (BufferedWriter users = Files.newBufferedWriter(Paths.get(asset_folder+"user.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2birthday = Files.newBufferedWriter(Paths.get(asset_folder+"user2birthday.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2hometown = Files.newBufferedWriter(Paths.get(asset_folder+"user2hometown.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2location = Files.newBufferedWriter(Paths.get(asset_folder+"user2location.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2gender = Files.newBufferedWriter(Paths.get(asset_folder+"user2gender.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2interest = Files.newBufferedWriter(Paths.get(asset_folder+"user2interest.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2relationship = Files.newBufferedWriter(Paths.get(asset_folder+"user2relationship.txt"), StandardCharsets.UTF_8);
+				BufferedWriter user2like = Files.newBufferedWriter(Paths.get(asset_folder+"user2like.txt"), StandardCharsets.UTF_8)) {
 			// For each graph node of type use, declare an entity
-			int user_id = 0, age_id = 0, hometown_id = 0, location_id = 0, interest_id = 0, relationship_id = 0, like_id = 0;
+			int user_id = -1, age_id = -1, hometown_id = -1, location_id = -1, interest_id = -1, relationship_id = -1, like_id = -1;
 			for (Vertex v : g.getGraph().getVertices(UserUtility.WHOAMI,"user")) {
 				// Insert user into users file
-				String s = String.valueOf(user_id++)+"\t"+v.getProperty(UserUtility.ID)+System.lineSeparator();
+				String s = String.valueOf(++user_id)+"\t"+v.getId().toString()+System.lineSeparator();
 				users.write(s, 0, s.length());
 				// Insert user-birthday relation
 				String o = v.getProperty(UserUtility.BIRTHDAY);
-				if(o != null) {
-					// Assuming a date format like dd\/mm\/yyyy
+				if(o != null && o != "null") {
 					Integer user_age = Util.getAge(Util.parseDate(o));
 					Integer age_remapped_id;
 					if((age_remapped_id = age_map.get(user_age)) == null) {
+						age_map.put(user_age, ++age_id);
 						age_remapped_id = age_id;
-						age_map.put(user_age, age_id++);
 					}
 					s = String.valueOf(user_id)+"\t"+age_remapped_id+System.lineSeparator();
 					user2birthday.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.HOMETOWN);
-				if(o != null) {
+				if(o != null && o != "null") {
 					Integer hometown_remapped_id;
 					if((hometown_remapped_id = hometown_map.get(o)) == null) {
+						hometown_map.put(o, ++hometown_id);
 						hometown_remapped_id = hometown_id;
-						hometown_map.put(o, hometown_id++);
 					}
 					s = String.valueOf(user_id)+"\t"+hometown_remapped_id+System.lineSeparator();
 					user2hometown.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.LOCATION);
-				if(o != null) {
+				if(o != null && o != "null") {
 					Integer location_remapped_id;
 					if((location_remapped_id = location_map.get(o)) == null) {
+						location_map.put(o, ++location_id);
 						location_remapped_id = location_id;
-						location_map.put(o, location_id++);
 					}
 					s = String.valueOf(user_id)+"\t"+location_remapped_id+System.lineSeparator();
 					user2location.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.GENDER);
-				if(o != null) {
-					s = String.valueOf(user_id)+"\t"+(o == "male"?String.valueOf(male):String.valueOf(female))+System.lineSeparator();
+				if(o != null && o != "null") {
+					s = String.valueOf(user_id)+"\t"+(o.equals("male")?String.valueOf(male):String.valueOf(female))+System.lineSeparator();
 					user2gender.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.INTERESTED_IN);
-				if(o != null) {
+				if(o != null && o != "null") {
 					Integer interest_remapped_id;
 					if((interest_remapped_id = interested_in_map.get(o)) == null) {
+						interested_in_map.put(o, ++interest_id);
 						interest_remapped_id = interest_id;
-						interested_in_map.put(o, interest_id++);
 					}
 					s = String.valueOf(user_id)+"\t"+interest_remapped_id+System.lineSeparator();
 					user2interest.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.REL_STATUS);
-				if(o != null) {
+				if(o != null && o != "null") {
 					Integer relationship_remapped_id;
 					if((relationship_remapped_id = relationship_map.get(o)) == null) {
+						relationship_map.put(o, ++relationship_id);
 						relationship_remapped_id = relationship_id;
-						relationship_map.put(o, relationship_id++);
 					}
 					s = String.valueOf(user_id)+"\t"+relationship_remapped_id+System.lineSeparator();
 					user2relationship.write(s, 0, s.length());
 				}
 				// Now add to the file for the user2like relation (relations among homogenous entities are not allowed by this algorithm)
 				for (Edge e : v.getEdges(Direction.OUT, UserUtility.LIKES)) {
-					// A like edge is always user -> like. Edge.getVertex(Direction) returns the tail/out or head/in vertex.
-					Vertex l = e.getVertex(Direction.OUT);
+					// A like edge is always (tail) user -> like (head). Edge.getVertex(Direction) returns the tail/out or head/in vertex.
+					Vertex l = e.getVertex(Direction.IN);
 					Integer like_remapped_id;
 					if((like_remapped_id = like_map.get(l.getId())) == null) {
+						like_map.put(l.getId().toString(), ++like_id);
 						like_remapped_id = like_id;
-						like_map.put(l.getId().toString(), like_id++);
 					}
 					s = user_id+"\t"+like_remapped_id.toString()+System.lineSeparator();
 					user2like.write(s, 0, s.length());
@@ -135,44 +137,75 @@ public class NetClusConverter implements Converter {
 		    System.err.format("IOException: %s%n", e);
 		}
 		// Now make a file for each remaining entity
-		try (BufferedWriter gender = Files.newBufferedWriter(Paths.get("gender.txt"), StandardCharsets.UTF_8)) {
+		try (BufferedWriter gender = Files.newBufferedWriter(Paths.get(asset_folder+"gender.txt"), StandardCharsets.UTF_8)) {
 			String s = male+"\tmale"+System.lineSeparator()+female+"\tfemale";
 			gender.write(s, 0, s.length());
 		} catch (IOException e) {
 			System.err.format("IOException: %s%n", e);
 		}
-		try (BufferedWriter hometown = Files.newBufferedWriter(Paths.get("hometown.txt"), StandardCharsets.UTF_8)) {
-			for (Map.Entry<String, Integer> entry : hometown_map.entrySet()) {
-				String s = entry.getKey()+"\t"+entry.getValue()+System.lineSeparator();
-				hometown.write(s, 0, s.length());
+		if(!age_map.isEmpty()) {
+			try (BufferedWriter age = Files.newBufferedWriter(Paths.get(asset_folder+"birthday.txt"), StandardCharsets.UTF_8)) {
+				for (Map.Entry<Integer, Integer> entry : age_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					age.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
 			}
-		} catch (IOException e) {
-			System.err.format("IOException: %s%n", e);
-		};
-		try (BufferedWriter location = Files.newBufferedWriter(Paths.get("location.txt"), StandardCharsets.UTF_8)) {
-			for (Map.Entry<String, Integer> entry : location_map.entrySet()) {
-				String s = entry.getKey()+"\t"+entry.getValue()+System.lineSeparator();
-				location.write(s, 0, s.length());
-			}
-		} catch (IOException e) {
-			System.err.format("IOException: %s%n", e);
 		}
-		try(BufferedWriter interested_in = Files.newBufferedWriter(Paths.get("interested_in.txt"), StandardCharsets.UTF_8)) {
-			for (Map.Entry<String, Integer> entry : interested_in_map.entrySet()) {
-				String s = entry.getKey()+"\t"+entry.getValue()+System.lineSeparator();
-				interested_in.write(s, 0, s.length());
+		if(!hometown_map.isEmpty()) {
+			try (BufferedWriter hometown = Files.newBufferedWriter(Paths.get(asset_folder+"hometown.txt"), StandardCharsets.UTF_8)) {
+				for (Map.Entry<String, Integer> entry : hometown_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					hometown.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
 			}
-		} catch (IOException e) {
-			System.err.format("IOException: %s%n", e);
 		}
-		try(BufferedWriter relationship = Files.newBufferedWriter(Paths.get("relationship.txt"), StandardCharsets.UTF_8)){
-			for (Map.Entry<String, Integer> entry : relationship_map.entrySet()) {
-				String s = entry.getKey()+"\t"+entry.getValue()+System.lineSeparator();
-				relationship.write(s, 0, s.length());
+		if(!location_map.isEmpty()) {
+			try (BufferedWriter location = Files.newBufferedWriter(Paths.get(asset_folder+"location.txt"), StandardCharsets.UTF_8)) {
+				for (Map.Entry<String, Integer> entry : location_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					location.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
 			}
-		} catch (IOException e) {
-			System.err.format("IOException: %s%n", e);
 		}
+		if(!interested_in_map.isEmpty()) {
+			try(BufferedWriter interested_in = Files.newBufferedWriter(Paths.get(asset_folder+"interested_in.txt"), StandardCharsets.UTF_8)) {
+				for (Map.Entry<String, Integer> entry : interested_in_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					interested_in.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
+			}
+		}
+		if(!relationship_map.isEmpty()) {
+			try(BufferedWriter relationship = Files.newBufferedWriter(Paths.get(asset_folder+"relationship.txt"), StandardCharsets.UTF_8)){
+				for (Map.Entry<String, Integer> entry : relationship_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					relationship.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
+			}
+		}
+		if(!like_map.isEmpty()) {
+			try(BufferedWriter like = Files.newBufferedWriter(Paths.get(asset_folder+"like.txt"), StandardCharsets.UTF_8)){
+				for (Map.Entry<String, Integer> entry : like_map.entrySet()) {
+					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+					like.write(s, 0, s.length());
+				}
+			} catch (IOException e) {
+				System.err.format("IOException: %s%n", e);
+			}			
+		}
+		// Finally delete empty files
+		for(File file: new File(asset_folder).listFiles()) if(file.length() == 0) {file.delete(); }
+		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");
 	}
 
 	
@@ -203,7 +236,8 @@ public static void main(String[] args) throws IOException, FileNotFoundException
 //			i++;
 		}
 		
-		
+		// Call NetClus converter
+		new NetClusConverter().translate(g);
 
 //		System.out.println("\n--------------------------DEBUG--------------------------");
 //		
