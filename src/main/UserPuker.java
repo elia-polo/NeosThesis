@@ -10,14 +10,14 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
-class UserPuker {
+public class UserPuker {
 	
 	private String json_file;
 	private JsonObject jsonObj;
 	private EUser user;
 	
 	
-	UserPuker(String filename) throws FileNotFoundException, IOException {
+	public UserPuker(String filename) throws FileNotFoundException, IOException {
 		
 		json_file = filename;
 		user = new EUser();
@@ -32,7 +32,7 @@ class UserPuker {
 		
 	}
 	
-	EUser getEUser() {
+	public EUser getEUser() {
 		
 		if (json_file.contains("DAU"))           // if the filename contains the DAU substring  
 			user.setDAU(true);                   // then it is a DAU user

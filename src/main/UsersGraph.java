@@ -48,6 +48,8 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 
 public class UsersGraph {
 
+	private static final boolean debug = true; 
+	
 	private Graph graph;                 /* the whole users graph */
 
 	/**************************** debug purposes zone ****************************/
@@ -152,6 +154,9 @@ public class UsersGraph {
 			for (String f_id : user.getFriends()) { 
 				try {
 					v_friend = graph.addVertex(f_id);
+					if(debug) {
+						v_friend.setProperty(UserUtility.WHOAMI, "user");
+					}
 					users_number++;
 				} catch (IllegalArgumentException e) { 
 					v_friend = graph.getVertex(f_id);
