@@ -1,19 +1,13 @@
 package main;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.activity.InvalidActivityException;
-
-import com.tinkerpop.blueprints.Compare;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
-import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
 /**
@@ -54,6 +48,8 @@ import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 public class UsersGraph {
 
+	private static final boolean debug = true; 
+	
 	private Graph graph;                 /* the whole users graph */
 
 	/**************************** debug purposes zone ****************************/
@@ -158,7 +154,9 @@ public class UsersGraph {
 			for (String f_id : user.getFriends()) { 
 				try {
 					v_friend = graph.addVertex(f_id);
-					//v_friend.setProperty(UserUtility.WHOAMI, "user");
+					if(debug) {
+						v_friend.setProperty(UserUtility.WHOAMI, "user");
+					}
 					users_number++;
 				} catch (IllegalArgumentException e) { 
 					v_friend = graph.getVertex(f_id);
@@ -176,7 +174,6 @@ public class UsersGraph {
 				} catch (IllegalArgumentException e) { /* do nothing */ }
 
 			}
-			
 		}
 			
 		/* likes list */
@@ -216,7 +213,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/jx");
+		File inputFolder = new File("/home/np2k/Desktop/json_user");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
@@ -241,7 +238,6 @@ public class UsersGraph {
 			i++;
 		}
 		
-		
 
 		System.out.println("\n--------------------------DEBUG--------------------------");
 		
@@ -263,7 +259,7 @@ public class UsersGraph {
 		else
 			System.out.println("#graph vertex == #user+#likes!!!!!!");
 
-		File output_net = new File("/home/np2k/Desktop", "net.gml");
+		/*File output_net = new File("/home/np2k/Desktop", "net.gml");
 		
 		BufferedOutputStream bos;
 		try {
@@ -274,7 +270,7 @@ public class UsersGraph {
 			return;
 		}
 
-		GMLWriter.outputGraph(graph,bos);
+		GMLWriter.outputGraph(graph,bos);*/
 				
 		System.out.println("\nnodes number: " + vertex_coll.size());
 		System.out.println("edge number: " + edge_coll.size());
