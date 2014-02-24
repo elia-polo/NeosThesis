@@ -33,7 +33,7 @@ public class Util {
 	}
 	
 	public static Calendar parseDate(String date) {
-		String[] split = date.split("\\\\/");
-		return new GregorianCalendar(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
+		String[] split = date.split("/");
+		return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[1])-1, Integer.parseInt(split[0]));
 	}
 }
