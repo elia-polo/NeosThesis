@@ -125,8 +125,7 @@ public class UsersGraph {
 			users_number++;
 		} catch(IllegalArgumentException e) {		
 			//System.out.println(user.getId() + ": already in!"); //DEBUG
-			graph.removeVertex(graph.getVertex(user.getId()));
-			v_user = graph.addVertex(user.getId());
+			v_user = graph.getVertex(user.getId());
 			shared_users++;
 		}
 		
@@ -162,7 +161,20 @@ public class UsersGraph {
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
 				}
-				graph.addEdge(null, v_user, v_friend, UserUtility.FRIEND);
+				
+				String edge_id;
+				/*
+				 * create an unique id for the edge between a user and its
+				 * friend
+				 */
+				if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0)
+					edge_id = v_user.getId().toString() + "-"+ v_friend.getId().toString();
+				else
+					edge_id = v_friend.getId().toString() + "-"+ v_user.getId().toString();
+				try {
+					graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
+				} catch (IllegalArgumentException e) { /* do nothing */
+				}
 			}
 		}
 			

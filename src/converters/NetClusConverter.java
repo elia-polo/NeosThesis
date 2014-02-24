@@ -33,8 +33,8 @@ public class NetClusConverter implements Converter {
 	 * <li>a file is created for each Entity and Relation
 	 * <li>each Node instance and Node or Edge property value is assigned a unique (among homogenous values, that is a node instance and node property instance may share the same id) integer id
 	 * <li>the Node instance and Node or Edge property value is described as a string
-	 * <li>Entity files are tab separated lines of &lt;Entity_id,Entity_value&gt; pairs; the first entity must be parsable to integer, the second entity must be parsable to string
-	 * <li>Relation files are tab separated lines of &lt;Entity_id,Entity_id&gt; pairs; both entities must be parsable to integer
+	 * <li>Entity files are tab separated values (TSV) lines of &lt;Entity_id,Entity_value&gt; pairs; the first entity must be parsable to integer, the second entity must be parsable to string
+	 * <li>Relation files are tab separated values (TSV) lines of &lt;Entity_id,Entity_id&gt; pairs; both entities must be parsable to integer
 	 * </ul>
 	 * @param g The UsersGraph to be converted
 	 */
