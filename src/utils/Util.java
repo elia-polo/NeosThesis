@@ -1,7 +1,14 @@
 package utils;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.GregorianCalendar;
+
+import com.google.code.geocoder.Geocoder;
+import com.google.code.geocoder.GeocoderRequestBuilder;
+import com.google.code.geocoder.model.GeocodeResponse;
+import com.google.code.geocoder.model.GeocoderRequest;
+import com.google.code.geocoder.model.LatLng;
 
 public class Util {
 	private static final Calendar now;
@@ -34,20 +41,44 @@ public class Util {
 	
 	public static Calendar parseDate(String date) {
 		String[] split = date.split("/");
-		return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[1])-1, Integer.parseInt(split[0]));
+		return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[0])-1, Integer.parseInt(split[1]));
 	}
 	
-	public static String[] fromCSV(String s) {
-		return s.split(",");
+	public static String[] fromXSV(String s, String separator) {
+		return s.split(separator);
 	}
 	
-	public static String toCSV(String[] s) {
+	public static String toXSV(Object[] o, String separator) {
 		StringBuilder sb = new StringBuilder();
-		String separator = "";
-		for(String tmp : s) {
-			sb.append(separator).append(tmp);
-			separator = ",";
+		String sep = "";
+		for(Object tmp : o) {
+			sb.append(sep).append(tmp.toString());
+			sep = separator;
 		}
 		return sb.toString();
+	}
+	
+	public static String toXSV(Collection<Object> o, String separator) {
+		StringBuilder sb = new StringBuilder();
+		String sep = "";
+		for(Object tmp : o) {
+			sb.append(sep).append(tmp.toString());
+			sep = separator;
+		}
+		return sb.toString();
+	}
+	
+	public static LatLng getCoordinates(String place) {
+		final Geocoder geocoder = new Geocoder();
+		GeocoderRequest request = new GeocoderRequestBuilder()
+				.setAddress(place).setLanguage("en")
+				.getGeocoderRequest();
+		GeocodeResponse response = geocoder.geocode(request);
+		if(!response.getResults().isEmpty()) {
+			// Pick the most relevant match
+			return response.getResults().get(0).getGeometry().getLocation();
+		} else {
+			return null;
+		}
 	}
 }
