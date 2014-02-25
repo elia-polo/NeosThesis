@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 
+import utils.Util;
+
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
@@ -61,6 +63,8 @@ public class UsersGraph {
 	private static int shared_friends = 0;      //sommatoria di amici in comune
  	private static int shared_likes = 0;        //sommatoria di likes in comune
 	
+ 	public Stats statistics = new Stats();
+ 	
 	public int getSharedUsers() { return shared_users; }
 	public int getSharedFriends() { return shared_friends; }
 	public int getSharedLikes() { return shared_likes; }
@@ -82,20 +86,24 @@ public class UsersGraph {
 	
 	/**
 	 * 
-	 * Vertex.setProperty faï¿½ade
+	 * Vertex.setProperty façade
 	 * @param v vertex to which set the properties 
 	 * @param name properties name
 	 * @param o properties value
 	 * 
-	 * @return void
+	 * @return true if (o is not null) a valid property was added to the given vertex, false otherwise
 	 *  
 	 * */
-	private void setProperty(Vertex v, String name, Object o)
+	private boolean setProperty(Vertex v, String name, Object o)
 	{
-		if (o!=null)
+		if (o!=null) {
 			v.setProperty(name, o);
-		else
+			return true;
+		}
+		else {
 			v.setProperty(name, "null");
+			return false;
+		}
 	}
 
 	/**
@@ -119,9 +127,12 @@ public class UsersGraph {
 	
 	public Graph addUser(EUser user) 
 	{
+		// Increment always, even if the node was already inserted
+		statistics.incrementUserCount();
 		Vertex v_user;
 		try {
 			v_user = graph.addVertex(user.getId());
+			statistics.incrementNodeCount();
 			users_number++;
 		} catch(IllegalArgumentException e) {		
 			//System.out.println(user.getId() + ": already in!"); //DEBUG
@@ -134,30 +145,59 @@ public class UsersGraph {
 		// !!!setProperty(v_user,"ide", user.getId()); not necessary because of addVertex(user.getId())
 		
 		setProperty(v_user,UserUtility.ISDAU, user.isDAU());
-		setProperty(v_user,UserUtility.GENDER, user.getGender());
-		setProperty(v_user,UserUtility.BIRTHDAY, user.getBirthday());
-		setProperty(v_user,UserUtility.REL_STATUS, user.getRelationship_status());
-		setProperty(v_user,UserUtility.INTERESTED_IN, user.getInterested_in());
+		if(setProperty(v_user,UserUtility.GENDER, user.getGender())) {
+			statistics.incrementGender();
+		}
+		if(setProperty(v_user,UserUtility.BIRTHDAY, user.getBirthday())) {
+			statistics.incrementBirthday();
+		}
+		if(setProperty(v_user,UserUtility.REL_STATUS, user.getRelationship_status())) {
+			statistics.incrementRelStatus();
+		}
+		if(setProperty(v_user,UserUtility.INTERESTED_IN, user.getInterested_in())) {
+			statistics.incrementInterestedIn();
+		}
 		
 		//!!!only id is used
-		if (user.getHometown()!=null)
-			setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId());
+		if (user.getHometown()!=null) {
+			if(setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId())) {
+				statistics.incrementHometown();
+			}
+		}
 		
 		//!!!only id is used
-		if (user.getLocation()!=null)
-			setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId());
+		if (user.getLocation()!=null) {
+			if(setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId())) {
+				statistics.incrementLocation();
+			}
+		}
+		
+		if(user.getEdu()!= null) {
+			String[] vec = user.getEduVec();
+			if(setProperty(v_user,UserUtility.EDUCATION, Util.toCSV(vec))) {
+				statistics.incrementEducation();
+				if(vec[0].equals("1"))
+					statistics.incrementHighSchool();
+				if(vec[1].equals("1"))
+					statistics.incrementCollege();
+				if(vec[2].equals("1"))
+					statistics.incrementGraduateSchool();
+			}
+		}
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
+			statistics.incrementFriends();
 			Vertex v_friend;
 			String edge_id;
-			for (String f_id : user.getFriends()) { 
+			for (String f_id : user.getFriends()) {
 				try {
 					v_friend = graph.addVertex(f_id);
 					if(debug) {
 						v_friend.setProperty(UserUtility.WHOAMI, "user");
 					}
 					users_number++;
+					statistics.incrementNodeCount();
 				} catch (IllegalArgumentException e) { 
 					v_friend = graph.getVertex(f_id);
 					shared_friends++;
@@ -171,6 +211,7 @@ public class UsersGraph {
 				
 				try {
 					graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
+					statistics.incrementEdgeCount();
 				} catch (IllegalArgumentException e) { /* do nothing */ }
 
 			}
@@ -178,12 +219,14 @@ public class UsersGraph {
 			
 		/* likes list */
 		if (user.getLikes()!=null) {
+			statistics.incrementLikes();
 			Vertex v_like;
-			for (ELike like : user.getLikes()) {			
+			for (ELike like : user.getLikes()) {
 				try {
 					//!!!only id is used
 					v_like = graph.addVertex(like.getId());
 					likes_number++;
+					statistics.incrementLikeCount();
 					//setProperty(v_like, "ide", like.getId());
 					
 					setProperty(v_like, UserUtility.NAME, like.getName());
@@ -205,6 +248,7 @@ public class UsersGraph {
 					shared_likes++;
 				}
 				graph.addEdge(null, v_user, v_like, UserUtility.LIKES);
+				statistics.incrementEdgeCount();
 			}
 		}
 		
@@ -284,5 +328,41 @@ public class UsersGraph {
 		System.out.println("\nuser_count: " + user_count);
 		System.out.println("likes_count: " + likes_count);
 		
+	}
+	
+	public float getMissingValueRatio(String field) {
+		switch(field) {
+		case UserUtility.GENDER:
+			return statistics.getGender()/statistics.getUserCount();
+		case UserUtility.REL_STATUS:
+			return statistics.getRelStatus()/statistics.getUserCount();
+		case UserUtility.INTERESTED_IN:
+			return statistics.getInterestedIn()/statistics.getUserCount();
+		case UserUtility.BIRTHDAY:
+			return statistics.getBirthday()/statistics.getUserCount();
+		case UserUtility.HOMETOWN:
+			return statistics.getHometown()/statistics.getUserCount();
+		case UserUtility.LOCATION:
+			return statistics.getLocation()/statistics.getUserCount();
+		case UserUtility.FRIENDS:
+			return statistics.getFriends()/statistics.getUserCount();
+//		case UserUtility.MUTUALFRIENDS:
+//			return statistics.getMutualFriends()/statistics.getUserCount();
+		case UserUtility.LIKES:
+			return statistics.getLikes()/statistics.getUserCount();
+		case UserUtility.CATEGORY:
+			return statistics.getCategory()/statistics.getUserCount();
+		case UserUtility.CATEGORY_LIST:
+			return statistics.getCategoryList()/statistics.getUserCount();
+		case UserUtility.EDUCATION:
+			return statistics.getEducation()/statistics.getUserCount();
+		case UserUtility.HIGH_SCHOOL:
+			return statistics.getHighSchool()/statistics.getUserCount();
+		case UserUtility.COLLEGE:
+			return statistics.getCollege()/statistics.getUserCount();
+		case UserUtility.GRADUATE_SCHOOL:
+			return statistics.getGraduateSchool()/statistics.getUserCount();
+		default:
+			throw new IllegalArgumentException("Field '"+field+"' does not exist");		}
 	}
 }

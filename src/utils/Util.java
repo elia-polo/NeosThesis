@@ -36,4 +36,18 @@ public class Util {
 		String[] split = date.split("/");
 		return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[1])-1, Integer.parseInt(split[0]));
 	}
+	
+	public static String[] fromCSV(String s) {
+		return s.split(",");
+	}
+	
+	public static String toCSV(String[] s) {
+		StringBuilder sb = new StringBuilder();
+		String separator = "";
+		for(String tmp : s) {
+			sb.append(separator).append(tmp);
+			separator = ",";
+		}
+		return sb.toString();
+	}
 }

@@ -17,11 +17,14 @@ public class UserUtility {
 	public final static String CATEGORY = "category";
 	public final static String CATEGORY_LIST = "category_list";
 	public final static String EDUCATION = "education";
+	public final static String HIGH_SCHOOL = "High School";
+	public final static String COLLEGE = "College";
+	public final static String GRADUATE_SCHOOL = "Graduate School";
 	public final static String SCHOOL = "school";
 	public final static String YEAR = "year";
 	public final static String TYPE = "type";
 	public final static String WHOAMI = "whoami";
-	public final static String ISDAU = "is_dau";	
+	public final static String ISDAU = "is_dau";
 }
 
 class ELike {
