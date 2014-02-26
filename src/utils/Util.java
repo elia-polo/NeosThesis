@@ -106,17 +106,16 @@ public class Util {
 
 	}
 	
-	public static String[] fromCSV(String s) {
-		return s.split(",");
-	}
-	
-	public static String toCSV(String[] s) {
-		StringBuilder sb = new StringBuilder();
-		String separator = "";
-		for(String tmp : s) {
-			sb.append(separator).append(tmp);
-			separator = ",";
+	public static LatLng getCoordinates(String place) {
+		final Geocoder geocoder = new Geocoder();
+		GeocoderRequest request = new GeocoderRequestBuilder()
+				.setAddress(place).setLanguage("en").getGeocoderRequest();
+		GeocodeResponse response = geocoder.geocode(request);
+		if (!response.getResults().isEmpty()) {
+			// Pick the most relevant match
+			return response.getResults().get(0).getGeometry().getLocation();
+		} else {
+			return null;
 		}
-		return sb.toString();
 	}
 }
