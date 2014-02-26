@@ -368,7 +368,7 @@ public class UsersGraph {
 		
 		if(user.getEdu()!= null) {
 			String[] vec = user.getEduVec();
-			if(setProperty(v_user,UserUtility.EDUCATION, Util.toCSV(vec))) {
+			if(setProperty(v_user,UserUtility.EDUCATION, Util.toXSV(vec, ","))) {
 				statistics.incrementEducation();
 				if(vec[0].equals("1"))
 					statistics.incrementHighSchool();

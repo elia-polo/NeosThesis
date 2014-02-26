@@ -24,6 +24,7 @@ public class NetClusConverter implements Converter {
 
 	private static final int male = 0;
 	private static final int female = 1;
+	private static final int male_and_female = 2;
 	private static final String asset_folder = "./assets/Netclus/";
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the NetClus clustering algorithm:
@@ -46,7 +47,7 @@ public class NetClusConverter implements Converter {
 		HashMap<Integer, Integer> age_map = new HashMap<Integer,Integer>();
 		HashMap<String, Integer> hometown_map = new HashMap<String, Integer>();
 		HashMap<String, Integer> location_map = new HashMap<String, Integer>();
-		HashMap<String, Integer> interested_in_map = new HashMap<String, Integer>(); // TODO replace with unwrapped mapping, as gender (no more than 3 values)
+//		HashMap<String, Integer> interested_in_map = new HashMap<String, Integer>(); // TODO replace with unwrapped mapping, as gender (no more than 3 values)
 		HashMap<String, Integer> relationship_map = new HashMap<String, Integer>();
 		HashMap<String, Integer> like_map = new HashMap<String, Integer>();
 		try (BufferedWriter users = Files.newBufferedWriter(Paths.get(asset_folder+"user.txt"), StandardCharsets.UTF_8);
@@ -58,14 +59,14 @@ public class NetClusConverter implements Converter {
 				BufferedWriter user2relationship = Files.newBufferedWriter(Paths.get(asset_folder+"user2relationship.txt"), StandardCharsets.UTF_8);
 				BufferedWriter user2like = Files.newBufferedWriter(Paths.get(asset_folder+"user2like.txt"), StandardCharsets.UTF_8)) {
 			// For each graph node of type use, declare an entity
-			int user_id = -1, age_id = -1, hometown_id = -1, location_id = -1, interest_id = -1, relationship_id = -1, like_id = -1;
+			int user_id = -1, age_id = -1, hometown_id = -1, location_id = -1, relationship_id = -1, like_id = -1;
 			for (Vertex v : g.getGraph().getVertices(UserUtility.WHOAMI,"user")) {
 				// Insert user into users file
 				String s = String.valueOf(++user_id)+"\t"+v.getId().toString()+System.lineSeparator();
 				users.write(s, 0, s.length());
 				// Insert user-birthday relation
 				String o = v.getProperty(UserUtility.BIRTHDAY);
-				if(o != null && o != "null") {
+				if(o != null && !o.equals("null")) {
 					Integer user_age = Util.getAge(Util.parseDate(o));
 					Integer age_remapped_id;
 					if((age_remapped_id = age_map.get(user_age)) == null) {
@@ -76,7 +77,7 @@ public class NetClusConverter implements Converter {
 					user2birthday.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.HOMETOWN);
-				if(o != null && o != "null") {
+				if(o != null && !o.equals("null")) {
 					Integer hometown_remapped_id;
 					if((hometown_remapped_id = hometown_map.get(o)) == null) {
 						hometown_map.put(o, ++hometown_id);
@@ -86,7 +87,7 @@ public class NetClusConverter implements Converter {
 					user2hometown.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.LOCATION);
-				if(o != null && o != "null") {
+				if(o != null && !o.equals("null")) {
 					Integer location_remapped_id;
 					if((location_remapped_id = location_map.get(o)) == null) {
 						location_map.put(o, ++location_id);
@@ -96,22 +97,25 @@ public class NetClusConverter implements Converter {
 					user2location.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.GENDER);
-				if(o != null && o != "null") {
+				if(o != null && !o.equals("null")) {
 					s = String.valueOf(user_id)+"\t"+(o.equals("male")?String.valueOf(male):String.valueOf(female))+System.lineSeparator();
 					user2gender.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.INTERESTED_IN);
-				if(o != null && o != "null") {
-					Integer interest_remapped_id;
-					if((interest_remapped_id = interested_in_map.get(o)) == null) {
-						interested_in_map.put(o, ++interest_id);
-						interest_remapped_id = interest_id;
+				if(o != null && !o.equals("null")) {
+					int interest_id;
+					if(o.equals("male")) {
+						interest_id = male;
+					} else if(o.equals("female")) {
+						interest_id = female;
+					} else {
+						interest_id = male_and_female;
 					}
-					s = String.valueOf(user_id)+"\t"+interest_remapped_id+System.lineSeparator();
+					s = String.valueOf(user_id)+"\t"+String.valueOf(interest_id)+System.lineSeparator();
 					user2interest.write(s, 0, s.length());
 				}
 				o = v.getProperty(UserUtility.REL_STATUS);
-				if(o != null && o != "null") {
+				if(o != null && !o.equals("null")) {
 					Integer relationship_remapped_id;
 					if((relationship_remapped_id = relationship_map.get(o)) == null) {
 						relationship_map.put(o, ++relationship_id);
@@ -173,15 +177,11 @@ public class NetClusConverter implements Converter {
 				System.err.format("IOException: %s%n", e);
 			}
 		}
-		if(!interested_in_map.isEmpty()) {
-			try(BufferedWriter interested_in = Files.newBufferedWriter(Paths.get(asset_folder+"interested_in.txt"), StandardCharsets.UTF_8)) {
-				for (Map.Entry<String, Integer> entry : interested_in_map.entrySet()) {
-					String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
-					interested_in.write(s, 0, s.length());
-				}
-			} catch (IOException e) {
-				System.err.format("IOException: %s%n", e);
-			}
+		try(BufferedWriter interested_in = Files.newBufferedWriter(Paths.get(asset_folder+"interested_in.txt"), StandardCharsets.UTF_8)) {
+			String s = male+"\tmale"+System.lineSeparator()+female+"\tfemale"+System.lineSeparator()+male_and_female+"\tmale_female";
+			interested_in.write(s, 0, s.length());
+		} catch (IOException e) {
+			System.err.format("IOException: %s%n", e);
 		}
 		if(!relationship_map.isEmpty()) {
 			try(BufferedWriter relationship = Files.newBufferedWriter(Paths.get(asset_folder+"relationship.txt"), StandardCharsets.UTF_8)){
