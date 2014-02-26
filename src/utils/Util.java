@@ -86,4 +86,18 @@ public class Util {
 			map.put(key, 1);				
 
 	}
+	
+	public static String[] fromCSV(String s) {
+		return s.split(",");
+	}
+	
+	public static String toCSV(String[] s) {
+		StringBuilder sb = new StringBuilder();
+		String separator = "";
+		for(String tmp : s) {
+			sb.append(separator).append(tmp);
+			separator = ",";
+		}
+		return sb.toString();
+	}
 }
