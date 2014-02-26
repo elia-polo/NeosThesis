@@ -1,13 +1,21 @@
 package main;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
+import utils.Util;
+
+import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
+import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
 /**
@@ -48,7 +56,7 @@ import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 
 public class UsersGraph {
 
-	private static final boolean debug = true; 
+	private static final boolean debug = false; 
 	
 	private Graph graph;                 /* the whole users graph */
 
@@ -82,7 +90,7 @@ public class UsersGraph {
 	
 	/**
 	 * 
-	 * Vertex.setProperty fa�ade
+	 * Vertex.setProperty facade
 	 * @param v vertex to which set the properties 
 	 * @param name properties name
 	 * @param o properties value
@@ -90,12 +98,197 @@ public class UsersGraph {
 	 * @return void
 	 *  
 	 * */
-	private void setProperty(Vertex v, String name, Object o)
-	{
-		if (o!=null)
+	private boolean setProperty(Vertex v, String name, Object o) {
+		if (o!=null) {
 			v.setProperty(name, o);
-		else
+			return true;
+		}
+		else {
 			v.setProperty(name, "null");
+			return false;
+		}
+	}
+	
+	public void fillMissingValue(Vertex v) {
+		 
+		/* friends list */
+		Iterable<Vertex> f_list = v.getVertices(Direction.BOTH, UserUtility.FRIEND);
+		
+		/* friends number */
+		int f_num=0; 
+		
+		/* the current property (age, location...)*/
+		String property;
+		
+		/******** gender variables ********/
+		int male = 0, female = 0;
+		
+		/******** age variable ********/
+		ArrayList<Integer> age_list = new ArrayList<Integer>();
+		
+		/******** location variable ********/
+		HashMap<String, Integer> loc_score = new HashMap<String, Integer>();
+
+		
+		/******** hometown variable ********/
+		HashMap<String, Integer> home_score = new HashMap<String, Integer>();
+
+		
+		/******** interested variable ********/
+		HashMap<String, Integer> interested_score = new HashMap<String, Integer>();
+
+		
+		/******** relationship variable ********/
+		HashMap<String, Integer> relationship_score = new HashMap<String, Integer>();
+
+		
+		
+		/******** education variable ********/
+		int hs_score = 0, c_score = 0, gs_score = 0;
+		String edu[];
+			
+		
+		for (Vertex friend : f_list) {
+			f_num ++;
+			/**** gender ****/
+			property = friend.getProperty(UserUtility.GENDER);
+						
+			if (property.equals("male"))
+				male++;
+			else if (property.equals("female"))
+				female++;
+			//else (if gender == "null") do nothing
+			
+			
+			/**** age ****/
+			property = friend.getProperty(UserUtility.AGE).toString();
+			
+			if (property.equals("null") == false) {
+				age_list.add(Integer.parseInt(property));
+			}
+
+			/**** location ****/
+			property = friend.getProperty(UserUtility.LOCATION).toString();
+			if (property.equals("null") == false) 
+				Util.incValue(loc_score, property);
+			
+			/**** hometown ****/
+			property = friend.getProperty(UserUtility.HOMETOWN).toString();
+			
+			if (property.equals("null") == false)
+				Util.incValue(home_score, property);
+			
+			/**** interested ****/
+			property = friend.getProperty(UserUtility.INTERESTED_IN).toString();
+			if (property.equals("null") == false)
+				Util.incValue(interested_score, property);
+			
+			/**** relation_ship ****/
+			property = friend.getProperty(UserUtility.REL_STATUS).toString();
+			if (property.equals("null") == false) 
+				Util.incValue(relationship_score, property);
+			
+			/**** education ****/
+			property = friend.getProperty(UserUtility.EDUCATION).toString();
+			if ( property.equals("0,0,0") == false ) {
+				edu = Util.fromCSV(property);
+				if (edu[0].equals("1")) hs_score++;
+				if (edu[1].equals("1")) c_score++;
+				if (edu[2].equals("1")) gs_score++;
+			}
+
+		}//FOR
+		
+		/* eduction */
+		property = v.getProperty(UserUtility.EDUCATION);
+		if (property.equals("0,0,0") == false) {
+			edu = Util.fromCSV(property);
+			
+			String[] res = new String[3];
+			res[0] = "0"; res[1] = "0"; res[2] = "0";
+			
+			if (edu[2].equals("1")) {
+				System.out.println("ci sono per gianluca");
+					res[0] = "1";
+					res[1] = "1";
+					res[2] = "1";
+			} else if(edu[1].equals("1")) { 
+					res[0] = "1";
+					res[1] = "1";
+			}
+			
+			
+			if (res[0].equals("0")) 
+				res[0] =  (f_num - hs_score) > hs_score  ? "0" : "1";
+			
+			
+			if (res[1].equals("0")) 
+				res[1] =  (f_num - c_score) > c_score  ? "0" : "1";
+			
+						
+			if (res[1].equals("0")) 
+				res[1] =  (f_num - gs_score) > gs_score  ? "0" : "1";
+				
+			
+			v.setProperty(UserUtility.EDUCATION, Util.toCSV(res));
+		}
+		/* age */
+		property = v.getProperty(UserUtility.AGE).toString();
+		if (property.equals("null")) {
+			if (age_list.isEmpty() == false)
+				v.setProperty(UserUtility.AGE, Util.median(age_list).toString());
+			else
+				v.setProperty(UserUtility.AGE, "22");			
+		}
+		
+		property = v.getProperty(UserUtility.AGE).toString();
+
+		/* location */
+		property = v.getProperty(UserUtility.LOCATION).toString();
+		if (property.equals("null"))
+		{
+			if (loc_score.isEmpty()==false)
+				v.setProperty(UserUtility.LOCATION, Util.retMax(loc_score));
+			else //default milano
+				v.setProperty(UserUtility.LOCATION, "108581069173026");
+		}
+		
+		/* hometown */
+		property = v.getProperty(UserUtility.HOMETOWN).toString();
+		if (property.equals("null")) 
+		{
+			if (home_score.isEmpty()==false)
+				v.setProperty(UserUtility.HOMETOWN, Util.retMax(home_score));
+			else 
+				v.setProperty(UserUtility.HOMETOWN, "108581069173026");
+		}
+		
+		/* interested */
+		property = v.getProperty(UserUtility.INTERESTED_IN).toString();
+		if (property.equals("null")) {
+			if (interested_score.isEmpty() == false)
+				v.setProperty(UserUtility.INTERESTED_IN, Util.retMax(interested_score));
+			else
+				v.setProperty(UserUtility.INTERESTED_IN, "male");
+		}
+		
+		/* relationship */
+		property = v.getProperty(UserUtility.REL_STATUS).toString();
+		if (property.equals("null")) {
+			if (relationship_score.isEmpty() == false) {
+				v.setProperty(UserUtility.REL_STATUS, Util.retMax(relationship_score));
+			}
+			else {
+				v.setProperty(UserUtility.REL_STATUS, "Single");
+			}
+		}
+
+			
+		/* gender */
+		property = v.getProperty(UserUtility.GENDER).toString();
+		if (property.equals("null")) 		
+			v.setProperty(UserUtility.GENDER, male > female ? "male" : "female" );
+		
 	}
 
 	/**
@@ -136,16 +329,31 @@ public class UsersGraph {
 		setProperty(v_user,UserUtility.ISDAU, user.isDAU());
 		setProperty(v_user,UserUtility.GENDER, user.getGender());
 		setProperty(v_user,UserUtility.BIRTHDAY, user.getBirthday());
+
+		//setProperty(v_user,UserUtility.AGE, Util.getAge(Util.parseDate(
+		if (user.getBirthday()!=null) 
+			setProperty(v_user,UserUtility.AGE, Util.getAge(Util.parseDate(user.getBirthday())));
+		else
+			v_user.setProperty(UserUtility.AGE, "null");
+		
 		setProperty(v_user,UserUtility.REL_STATUS, user.getRelationship_status());
 		setProperty(v_user,UserUtility.INTERESTED_IN, user.getInterested_in());
 		
+		/* eduction */
+		setProperty(v_user, UserUtility.EDUCATION, Util.toCSV(user.getEduVec()));
+		System.out.println("EDUCATION: " + user.getId().toString() + " " + Util.toCSV(user.getEduVec()));
+			
 		//!!!only id is used
-		if (user.getHometown()!=null)
-			setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId());
+		if (user.getHometown()!=null) {
+			v_user.setProperty(UserUtility.HOMETOWN, user.getHometown().getId());
+			System.out.println("HOMETOWN: " + user.getId().toString() + " " + user.getHometown().getId());
+		} else v_user.setProperty(UserUtility.HOMETOWN, "null");
 		
 		//!!!only id is used
-		if (user.getLocation()!=null)
-			setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId());
+		if (user.getLocation()!=null) {
+			v_user.setProperty(UserUtility.LOCATION, user.getLocation().getId());
+			System.out.println("LOCATION: " + user.getId().toString() + " " + user.getLocation().getId());
+		}else v_user.setProperty(UserUtility.LOCATION, "null");
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
@@ -213,7 +421,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/json_user");
+		File inputFolder = new File("/home/np2k/Desktop/test_missing");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
@@ -234,7 +442,7 @@ public class UsersGraph {
 			
 			if (u.getLikes()!=null) 
 				likes_count+= u.getLikes().size();
-			System.out.println(files.length-i);
+			//System.out.println(files.length-i);
 			i++;
 		}
 		
@@ -259,7 +467,7 @@ public class UsersGraph {
 		else
 			System.out.println("#graph vertex == #user+#likes!!!!!!");
 
-		/*File output_net = new File("/home/np2k/Desktop", "net.gml");
+		File output_net = new File("/home/np2k/Desktop", "net.gml");
 		
 		BufferedOutputStream bos;
 		try {
@@ -270,7 +478,7 @@ public class UsersGraph {
 			return;
 		}
 
-		GMLWriter.outputGraph(graph,bos);*/
+		GMLWriter.outputGraph(graph,bos);
 				
 		System.out.println("\nnodes number: " + vertex_coll.size());
 		System.out.println("edge number: " + edge_coll.size());
@@ -283,6 +491,31 @@ public class UsersGraph {
 		
 		System.out.println("\nuser_count: " + user_count);
 		System.out.println("likes_count: " + likes_count);
+		
+		//////////////////////////////////MISSING VALUE////////////////////////////////////////////////
+		
+		
+		Vertex a = graph.getVertex("1042024118");
+		Vertex n = graph.getVertex("1029116096");
+		System.out.println("\n\n*****************\ninferenza missing value: " + n.getId().toString());
+		g.fillMissingValue(n);
+		g.fillMissingValue(a);
+		
+		Graph newgraph = new TinkerGraph();
+		newgraph.addVertex(n);
+		newgraph.addVertex(a);
+		
+		output_net =  new File("/home/np2k/Desktop", "netnicola.gml");
+		try {
+			bos = new BufferedOutputStream(new FileOutputStream(output_net));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+
+		GMLWriter.outputGraph(graph,bos);
+
 		
 	}
 }

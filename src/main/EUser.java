@@ -8,6 +8,7 @@ public class EUser {
 	private boolean isDAU;
 	private String gender;
 	private String birthday;
+	private int age;
 	private String relationship_status;
 	private String interested_in;
 	
@@ -16,6 +17,7 @@ public class EUser {
 	
 	private CoupleNameId hometown;
 	private CoupleNameId location;
+	
 		
 	//hometown, education, location
 	private ArrayList<EEducation> edu;
@@ -44,6 +46,12 @@ public class EUser {
 	}
 	public void setBirthday(String birthday) {
 		this.birthday = birthday;
+	}
+	public int getAge() {
+		return age;
+	}
+	public void setAge(int age) {
+		this.age = age;
 	}
 	public String getRelationship_status() {
 		return relationship_status;
@@ -87,4 +95,26 @@ public class EUser {
 	public void setEdu(ArrayList<EEducation> edu) {
 		this.edu = edu;
 	}
+	
+	public String[] getEduVec() {
+		String[] tmp = {"0","0","0"};
+		for(EEducation e: edu) {
+//			System.out.println(e.getType()+","+UserUtility.HIGH_SCHOOL+","+UserUtility.COLLEGE+","+UserUtility.GRADUATE_SCHOOL);
+			switch(e.getType()) {
+			case UserUtility.HIGH_SCHOOL:
+				tmp[0] = "1";
+				break;
+			case UserUtility.COLLEGE:
+				tmp[1] = "1";
+				break;
+			case UserUtility.GRADUATE_SCHOOL:
+				tmp[2] = "1";
+				break;
+			default:
+				throw new IllegalArgumentException("Education type "+e.type+" does not exist");
+			}
+		}
+		return tmp;
+	}
+	
 }
