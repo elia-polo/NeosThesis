@@ -94,26 +94,6 @@ public class EUser {
 	public ArrayList<EEducation> getEdu() {
 		return edu;
 	}
-	public String[] getEduVec() {
-		String[] tmp = {"0","0","0"};
-		for(EEducation e: edu) {
-//			System.out.println(e.getType()+","+UserUtility.HIGH_SCHOOL+","+UserUtility.COLLEGE+","+UserUtility.GRADUATE_SCHOOL);
-			switch(e.getType()) {
-			case UserUtility.HIGH_SCHOOL:
-				tmp[0] = "1";
-				break;
-			case UserUtility.COLLEGE:
-				tmp[1] = "1";
-				break;
-			case UserUtility.GRADUATE_SCHOOL:
-				tmp[2] = "1";
-				break;
-			default:
-				throw new IllegalArgumentException("Education type "+e.type+" does not exist");
-			}
-		}
-		return tmp;
-	}
 	public String getEduCSV() {
 		return Util.toCSV(getEduVec());
 	}
