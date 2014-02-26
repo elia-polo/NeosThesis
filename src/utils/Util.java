@@ -2,7 +2,6 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -64,7 +63,7 @@ public class Util {
 		return sb.toString();
 	}
 
-	public static String toXSV(Collection<Object> o, String separator) {
+	public static String toXSV(Object[] o, String separator) {
 		StringBuilder sb = new StringBuilder();
 		String sep = "";
 		for(Object tmp : o) {
