@@ -124,8 +124,9 @@ public class UserPuker {
 			JsonArray friends = friends_obj.get("data").asArray();
 			ArrayList<String> friends_id = new ArrayList<String>();
 			
-			for (JsonValue f : friends)
+			for (JsonValue f : friends) 
 				friends_id.add(f.asObject().get_str_value(UserUtility.ID));
+			
 		
 			user.setFriends(friends_id);
 		} catch (NullPointerException e) { user.setFriends(null); }

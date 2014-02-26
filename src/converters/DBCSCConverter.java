@@ -1,3 +1,16 @@
+/**
+ * 
+ * - aggiungere coordinate hometown e location
+ * - pensare a come gestire attributi mancanti 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
 package converters;
 
 import java.io.File;

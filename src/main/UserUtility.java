@@ -4,9 +4,12 @@ import java.util.ArrayList;
 public class UserUtility {
 	public final static String ID = "id";
 	public final static String GENDER = "gender";
+	public final static String MALE = "male";
+	public final static String FEMALE = "female";
 	public final static String REL_STATUS = "relationship_status";
 	public final static String INTERESTED_IN = "interested_in";
 	public final static String BIRTHDAY = "birthday";
+	public final static String AGE = "age";
 	public final static String HOMETOWN = "hometown";
 	public final static String LOCATION = "location";
 	public final static String NAME = "name";
@@ -17,14 +20,15 @@ public class UserUtility {
 	public final static String CATEGORY = "category";
 	public final static String CATEGORY_LIST = "category_list";
 	public final static String EDUCATION = "education";
-	public final static String HIGH_SCHOOL = "High School";
-	public final static String COLLEGE = "College";
-	public final static String GRADUATE_SCHOOL = "Graduate School";
 	public final static String SCHOOL = "school";
 	public final static String YEAR = "year";
 	public final static String TYPE = "type";
+	public final static String HIGH_SCHOOL = "High School";
+	public final static String COLLEGE = "College";
+	public final static String GRADUATE_SCHOOL = "Graduate School";
 	public final static String WHOAMI = "whoami";
-	public final static String ISDAU = "is_dau";
+	public final static String ISDAU = "is_dau";	
+	
 }
 
 class ELike {
