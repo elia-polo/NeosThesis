@@ -1,6 +1,8 @@
 package main;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +15,7 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
+import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 
 /**
@@ -67,6 +70,7 @@ public class UsersGraph {
  	private static int shared_likes = 0;        //sommatoria di likes in comune
 	
  	public Stats statistics = new Stats();
+
  	
 	public int getSharedUsers() { return shared_users; }
 	public int getSharedFriends() { return shared_friends; }
@@ -282,8 +286,6 @@ public class UsersGraph {
 				v.setProperty(UserUtility.REL_STATUS, "Single");
 			}
 		}
-
-			
 		/* gender */
 		property = v.getProperty(UserUtility.GENDER).toString();
 		if (property.equals("null")) 		
@@ -336,6 +338,12 @@ public class UsersGraph {
 		if(setProperty(v_user,UserUtility.BIRTHDAY, user.getBirthday())) {
 			statistics.incrementBirthday();
 		}
+		
+		if (user.getBirthday()!=null) 
+			setProperty(v_user,UserUtility.AGE, Util.getAge(Util.parseDate(user.getBirthday())));
+		else
+			v_user.setProperty(UserUtility.AGE, "null");
+
 		if(setProperty(v_user,UserUtility.REL_STATUS, user.getRelationship_status())) {
 			statistics.incrementRelStatus();
 		}
@@ -343,19 +351,20 @@ public class UsersGraph {
 			statistics.incrementInterestedIn();
 		}
 		
+
 		//!!!only id is used
 		if (user.getHometown()!=null) {
 			if(setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId())) {
 				statistics.incrementHometown();
 			}
-		}
+		} else v_user.setProperty(UserUtility.HOMETOWN, "null");
 		
 		//!!!only id is used
 		if (user.getLocation()!=null) {
 			if(setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId())) {
 				statistics.incrementLocation();
 			}
-		}
+		} else v_user.setProperty(UserUtility.LOCATION, "null");
 		
 		if(user.getEdu()!= null) {
 			String[] vec = user.getEduVec();
@@ -442,7 +451,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/json_user");
+		File inputFolder = new File("/home/np2k/Desktop/test_missing");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
@@ -488,7 +497,7 @@ public class UsersGraph {
 		else
 			System.out.println("#graph vertex == #user+#likes!!!!!!");
 
-		/*File output_net = new File("/home/np2k/Desktop", "net.gml");
+		File output_net = new File("/home/np2k/Desktop", "net.gml");
 		
 		BufferedOutputStream bos;
 		try {
@@ -499,7 +508,7 @@ public class UsersGraph {
 			return;
 		}
 
-		GMLWriter.outputGraph(graph,bos);*/
+		GMLWriter.outputGraph(graph,bos);
 				
 		System.out.println("\nnodes number: " + vertex_coll.size());
 		System.out.println("edge number: " + edge_coll.size());
@@ -513,6 +522,27 @@ public class UsersGraph {
 		System.out.println("\nuser_count: " + user_count);
 		System.out.println("likes_count: " + likes_count);
 		
+		//////////////////////////////////MISSING VALUE////////////////////////////////////////////////
+		Vertex a = graph.getVertex("1042024118");
+		Vertex n = graph.getVertex("1029116096");
+		System.out.println("\n\n*****************\ninferenza missing value: " + n.getId().toString());
+		g.fillMissingValue(n);
+		g.fillMissingValue(a);
+		
+		Graph newgraph = new TinkerGraph();
+		newgraph.addVertex(n);
+		newgraph.addVertex(a);
+		
+		output_net =  new File("/home/np2k/Desktop", "newgraph.gml");
+		try {
+			bos = new BufferedOutputStream(new FileOutputStream(output_net));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+
+		GMLWriter.outputGraph(graph,bos);
 	}
 	
 	public float getMissingValueRatio(String field) {
