@@ -15,12 +15,12 @@ import com.google.code.geocoder.model.LatLng;
 
 public class Util {
 	private static final Calendar now;
-
+	
 	// Since the resolution is the day, it is unlikely that the day will change during program execution. A static initialization will suffice
 	static {
 		now = Calendar.getInstance();
 	}
-
+	
 	public static String getAge(String dob) {
 		
 		if (dob.equals("null"))
@@ -130,4 +130,16 @@ public class Util {
 			return null;
 		}
 	}
+	public static String[] fromCSV(String s) {
+		return s.split(",");
+	}
+	
+	public static String toCSV(String[] s) {
+		StringBuilder sb = new StringBuilder();
+		String separator = "";
+		for(String tmp : s) {
+			sb.append(separator).append(tmp);
+			separator = ",";
+		}
+
 }
