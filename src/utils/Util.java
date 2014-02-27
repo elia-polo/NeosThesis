@@ -50,33 +50,6 @@ public class Util {
 		  return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[0])-1, Integer.parseInt(split[1]));
 		}
 	
-	public static String[] fromCSV(String s) {
-		return s.split(",");
-}
-	public static String[] fromXSV(String s, String separator) {
-		return s.split(separator);
-	}
-
-	public static String toCSV(String[] s) {
-		StringBuilder sb = new StringBuilder();
-		String separator = "";
-		for(String tmp : s) {
-			sb.append(separator).append(tmp);
-			separator = ",";
-		}
-		return sb.toString();
-	}
-
-	public static String toXSV(Object[] o, String separator) {
-		StringBuilder sb = new StringBuilder();
-		String sep = "";
-		for(Object tmp : o) {
-			sb.append(sep).append(tmp.toString());
-			sep = separator;
-		}
-		return sb.toString();
-	}
-
 	/* now it calculates mean (not median) value */
 	public static Integer median(ArrayList<Integer> list) {
 		Integer res = new Integer(0);
@@ -109,6 +82,7 @@ public class Util {
 			map.put(key, 1);				
 
 	}
+	
 	/**
 	 * TO DO!
 	 * 
@@ -130,6 +104,22 @@ public class Util {
 			return null;
 		}
 	}
+	 public static String[] fromXSV(String s, String separator) {
+		  return s.split(separator);
+	 }
+
+	 public static String toXSV(Object[] o, String separator) {
+		StringBuilder sb = new StringBuilder();
+		String sep = "";
+		for(Object tmp : o) {
+			sb.append(sep).append(tmp.toString());
+			sep = separator;
+		}
+		return sb.toString();
+	}
+
+
+	 
 	public static String[] fromCSV(String s) {
 		return s.split(",");
 	}
@@ -141,5 +131,7 @@ public class Util {
 			sb.append(separator).append(tmp);
 			separator = ",";
 		}
+		return sb.toString();
+	}
 
 }
