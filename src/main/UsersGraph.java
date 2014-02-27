@@ -174,13 +174,14 @@ public class UsersGraph {
 			/**** location ****/
 			property = friend.getProperty(UserUtility.LOCATION).toString();
 			if (property.equals("null") == false) 
-				Util.incValue(loc_score, property);
+				Util.incValue(loc_score, property + "," + 
+						friend.getProperty(UserUtility.LOCATION_NAME).toString());
 			
 			/**** hometown ****/
 			property = friend.getProperty(UserUtility.HOMETOWN).toString();
-			
 			if (property.equals("null") == false)
-				Util.incValue(home_score, property);
+				Util.incValue(home_score, property + "," +
+						friend.getProperty(UserUtility.HOMETOWN_NAME).toString());
 			
 			/**** interested ****/
 			property = friend.getProperty(UserUtility.INTERESTED_IN).toString();
@@ -203,7 +204,7 @@ public class UsersGraph {
 
 		}//FOR
 		
-		/* eduction */
+		/* education */
 		property = v.getProperty(UserUtility.EDUCATION);
 		if (property.equals("0,0,0") == false) {
 			edu = Util.fromCSV(property);
@@ -212,7 +213,6 @@ public class UsersGraph {
 			res[0] = "0"; res[1] = "0"; res[2] = "0";
 			
 			if (edu[2].equals("1")) {
-				System.out.println("ci sono per gianluca");
 					res[0] = "1";
 					res[1] = "1";
 					res[2] = "1";
@@ -220,7 +220,6 @@ public class UsersGraph {
 					res[0] = "1";
 					res[1] = "1";
 			}
-			
 			
 			if (res[0].equals("0")) 
 				res[0] =  (f_num - hs_score) > hs_score  ? "0" : "1";
@@ -252,9 +251,15 @@ public class UsersGraph {
 		if (property.equals("null"))
 		{
 			if (loc_score.isEmpty()==false)
-				v.setProperty(UserUtility.LOCATION, Util.retMax(loc_score));
-			else //default milano
+			{
+				String[] loc = Util.fromCSV(Util.retMax(loc_score));				
+				v.setProperty(UserUtility.LOCATION, loc[0]);
+				v.setProperty(UserUtility.LOCATION_NAME, loc[1]+","+loc[2]);
+			}
+			else { 
 				v.setProperty(UserUtility.LOCATION, "108581069173026");
+				v.setProperty(UserUtility.LOCATION_NAME, "Milan,Italy");
+			}
 		}
 		
 		/* hometown */
@@ -262,9 +267,15 @@ public class UsersGraph {
 		if (property.equals("null")) 
 		{
 			if (home_score.isEmpty()==false)
-				v.setProperty(UserUtility.HOMETOWN, Util.retMax(home_score));
-			else 
+			{
+				String[] home = Util.fromCSV(Util.retMax(home_score));
+				v.setProperty(UserUtility.HOMETOWN, home[0]);
+				v.setProperty(UserUtility.HOMETOWN_NAME, home[1]);
+			}
+			else { 
 				v.setProperty(UserUtility.HOMETOWN, "108581069173026");
+				v.setProperty(UserUtility.HOMETOWN_NAME, "Milan,Italy");
+			}
 		}
 		
 		/* interested */
@@ -340,7 +351,7 @@ public class UsersGraph {
 		}
 		
 		if (user.getBirthday()!=null) 
-			setProperty(v_user,UserUtility.AGE, Util.getAge(Util.parseDate(user.getBirthday())));
+			setProperty(v_user,UserUtility.AGE, Util.getAge(user.getBirthday()));
 		else
 			v_user.setProperty(UserUtility.AGE, "null");
 
@@ -352,19 +363,26 @@ public class UsersGraph {
 		}
 		
 
-		//!!!only id is used
 		if (user.getHometown()!=null) {
 			if(setProperty(v_user,UserUtility.HOMETOWN, user.getHometown().getId())) {
 				statistics.incrementHometown();
 			}
-		} else v_user.setProperty(UserUtility.HOMETOWN, "null");
+			setProperty(v_user, UserUtility.HOMETOWN_NAME, user.getHometown().getName());
+			
+		} else {
+			v_user.setProperty(UserUtility.HOMETOWN, "null");
+			v_user.setProperty(UserUtility.HOMETOWN_NAME, "null");			
+		}
 		
-		//!!!only id is used
 		if (user.getLocation()!=null) {
 			if(setProperty(v_user,UserUtility.LOCATION, user.getLocation().getId())) {
 				statistics.incrementLocation();
 			}
-		} else v_user.setProperty(UserUtility.LOCATION, "null");
+			setProperty(v_user, UserUtility.LOCATION_NAME, user.getLocation().getName().replaceAll(", ", ","));
+		} else {
+			v_user.setProperty(UserUtility.LOCATION, "null");
+			v_user.setProperty(UserUtility.LOCATION_NAME, "null");
+		}
 		
 		if(user.getEdu()!= null) {
 			String[] vec = user.getEduVec();
@@ -377,7 +395,7 @@ public class UsersGraph {
 				if(vec[2].equals("1"))
 					statistics.incrementGraduateSchool();
 			}
-		}
+		} else setProperty(v_user, UserUtility.EDUCATION, "null");
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
@@ -456,7 +474,7 @@ public class UsersGraph {
 		
 		UsersGraph g = new UsersGraph();
 		
-		int i=0;
+		//int i=0;
 		int user_count=0, likes_count=0;
 		EUser u;
 		UserPuker j;
@@ -472,8 +490,8 @@ public class UsersGraph {
 			
 			if (u.getLikes()!=null) 
 				likes_count+= u.getLikes().size();
-			System.out.println(files.length-i);
-			i++;
+			//System.out.println(files.length-i);
+			//i++;
 		}
 		
 
@@ -525,7 +543,7 @@ public class UsersGraph {
 		//////////////////////////////////MISSING VALUE////////////////////////////////////////////////
 		Vertex a = graph.getVertex("1042024118");
 		Vertex n = graph.getVertex("1029116096");
-		System.out.println("\n\n*****************\ninferenza missing value: " + n.getId().toString());
+		System.out.println("\n\n*****************\ninferenza missing value...\n");
 		g.fillMissingValue(n);
 		g.fillMissingValue(a);
 		

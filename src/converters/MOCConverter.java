@@ -98,7 +98,7 @@ public class MOCConverter implements Converter {
 					profile[G_FEMALE] = "1";
 					break;
 				}
-				profile[AGE] = Util.getAge(Util.parseDate(v.getProperty(UserUtility.BIRTHDAY).toString()));
+				profile[AGE] = Util.getAge(v.getProperty(UserUtility.BIRTHDAY).toString());
 				s = v.getProperty(UserUtility.REL_STATUS).toString();
 				if(s != null && !s.equals("null")) {
 					switch(s) {

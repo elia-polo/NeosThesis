@@ -70,7 +70,7 @@ public class NetClusConverter implements Converter {
 				// Insert user-birthday relation
 				String o = v.getProperty(UserUtility.BIRTHDAY);
 				if(o != null && !o.equals("null")) {
-					Integer user_age = Util.getAge(Util.parseDate(o));
+					Integer user_age = new Integer(Util.getAge(o));
 					Integer age_remapped_id;
 					if((age_remapped_id = age_map.get(user_age)) == null) {
 						age_map.put(user_age, ++age_id);

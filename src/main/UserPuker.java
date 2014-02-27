@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import utils.Util;
+
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -47,7 +49,12 @@ public class UserPuker {
 		user.setId(jsonObj.get_str_value(UserUtility.ID));
 		user.setGender(jsonObj.get_str_value(UserUtility.GENDER));
 		user.setRelationship_status(jsonObj.get_str_value(UserUtility.REL_STATUS));
-		user.setBirthday(jsonObj.get_str_value(UserUtility.BIRTHDAY));
+		
+		String bDay = jsonObj.get_str_value(UserUtility.BIRTHDAY);
+		if (bDay!=null)
+			user.setBirthday(Util.getYear(bDay));
+		else
+			user.setBirthday("null");
 		
 		/*
 		 * checks if interested_in exists, in that case 
