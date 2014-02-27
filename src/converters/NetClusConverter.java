@@ -26,6 +26,9 @@ public class NetClusConverter implements Converter {
 	private static final int female = 1;
 	private static final int male_and_female = 2;
 	private static final String asset_folder = "./assets/Netclus/";
+	static {
+		new File(asset_folder).mkdirs();
+	}
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the NetClus clustering algorithm:
 	 * <ul>

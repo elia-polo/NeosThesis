@@ -14,10 +14,14 @@ import com.google.code.geocoder.model.LatLng;
 
 public class Util {
 	private static final Calendar now;
+	private static final LRUCache<String, LatLng> geocoder_cache;
+	private static final Geocoder geocoder;
 	
 	// Since the resolution is the day, it is unlikely that the day will change during program execution. A static initialization will suffice
 	static {
 		now = Calendar.getInstance();
+		geocoder_cache = new LRUCache<String, LatLng>(100);
+		geocoder = new Geocoder();
 	}
 	
 	public static int getAge(Calendar dob) {
@@ -107,15 +111,19 @@ public class Util {
 	}
 	
 	public static LatLng getCoordinates(String place) {
-		final Geocoder geocoder = new Geocoder();
-		GeocoderRequest request = new GeocoderRequestBuilder()
-				.setAddress(place).setLanguage("en").getGeocoderRequest();
-		GeocodeResponse response = geocoder.geocode(request);
-		if (!response.getResults().isEmpty()) {
-			// Pick the most relevant match
-			return response.getResults().get(0).getGeometry().getLocation();
-		} else {
-			return null;
+		LatLng result;
+		if ((result = geocoder_cache.get(place)) == null) {
+			GeocoderRequest request = new GeocoderRequestBuilder()
+					.setAddress(place).setLanguage("en").getGeocoderRequest();
+			GeocodeResponse response = geocoder.geocode(request);
+			if (!response.getResults().isEmpty()) {
+				// Pick the most relevant match
+				result = response.getResults().get(0).getGeometry().getLocation();
+				geocoder_cache.put(place, result);
+			} else {
+				result = null;
+			}
 		}
+		return result;
 	}
 }

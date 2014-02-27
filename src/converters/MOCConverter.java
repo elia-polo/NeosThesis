@@ -23,6 +23,9 @@ import facebook.RelationshipStatus;
 public class MOCConverter implements Converter {
 
 	private static final String asset_folder = "./assets/MOC/";
+	static {
+		new File(asset_folder).mkdirs();
+	}
 	
 	private static final int G_MALE = 0;
 	private static final int G_FEMALE = 1;
@@ -47,19 +50,6 @@ public class MOCConverter implements Converter {
 	private static final int E_GRADUATE_SCHOOL = 20;
 
 	private static final int PROFILE_ATTRIBUTES = 21;
-	
-//	private static class BooleanWrapper {
-//		private boolean value;
-//		
-//		BooleanWrapper(boolean value) {this.value = value; }
-//		
-//		public String toString() {
-//			if(value)
-//				return "1";
-//			else
-//				return "0";
-//		}
-//	}
 	
 	/**
 	 * <p>Converts a UsersGraph into a dataset file suitable for the MOC clustering algorithm.</p>
@@ -152,8 +142,10 @@ public class MOCConverter implements Converter {
 				s = v.getProperty(UserUtility.HOMETOWN).toString();
 				if(s != null && !s.equals("null")) {
 					LatLng coords = Util.getCoordinates(s);
-					profile[HOMETOWN_LATITUDE] = coords.getLat();
-					profile[HOMETOWN_LONGITUDE] = coords.getLng();
+					if(coords != null) {
+						profile[HOMETOWN_LATITUDE] = coords.getLat();
+						profile[HOMETOWN_LONGITUDE] = coords.getLng();
+					} // else imputation is required TODO
 				}
 				s = v.getProperty(UserUtility.LOCATION).toString();
 				if(s != null && !s.equals("null")) {
