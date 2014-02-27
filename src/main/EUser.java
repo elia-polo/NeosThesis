@@ -13,17 +13,17 @@ public class EUser {
 	private int age;
 	private String relationship_status;
 	private String interested_in;
-	
+
 	private ArrayList<String> friends;
 	private ArrayList<ELike> likes;
-	
+
 	private CoupleNameId hometown;
 	private CoupleNameId location;
-	
-		
+
+
 	//hometown, education, location
 	private ArrayList<EEducation> edu;
-	
+
 	/* getter&setter */
 	public String getId() {
 		return id;
@@ -94,7 +94,7 @@ public class EUser {
 	public ArrayList<EEducation> getEdu() {
 		return edu;
 	}
-	
+
 	/**
 	 * Formats the Education history of the current user as a vector with three components: <i>HIGH SCHOOL</i>, <i>COLLEGE</i>, <i>GRADUATE SCHOOL</i>.<br>
 	 * Each component may take value 1 or 0. 1 means that the user has provided a value for that education level in his profile, 0 means the information is absent (either undisclosed or not applicable)
@@ -103,7 +103,6 @@ public class EUser {
 	public String[] getEduVec() {
 		String[] tmp = {"0","0","0"};
 		for(EEducation e: edu) {
-
 			switch(e.getType()) {
 			case UserUtility.HIGH_SCHOOL:
 				tmp[0] = "1";
@@ -121,10 +120,10 @@ public class EUser {
 		return tmp;
 	}
 	public String getEduCSV() {
-		return Util.toCSV(getEduVec());
+		return Util.toXSV(getEduVec(), ",");
 	}
 	public void setEdu(ArrayList<EEducation> edu) {
 		this.edu = edu;
 	}
-	
+
 }

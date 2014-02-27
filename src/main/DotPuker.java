@@ -223,7 +223,7 @@ public class DotPuker {
 		BufferedWriter bw;
 		
 		if (args.length==0) {
-			inputFolder = new File("/home/np2k/Desktop/jx");
+			inputFolder = new File("/home/np2k/Desktop/json_user");
 			outputFolder = new File("/home/np2k/Desktop/");
 		} else {
 			inputFolder = new File(args[0]);

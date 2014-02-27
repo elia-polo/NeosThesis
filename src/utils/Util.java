@@ -12,39 +12,43 @@ import com.google.code.geocoder.model.GeocodeResponse;
 import com.google.code.geocoder.model.GeocoderRequest;
 import com.google.code.geocoder.model.LatLng;
 
+
 public class Util {
 	private static final Calendar now;
-	
+
 	// Since the resolution is the day, it is unlikely that the day will change during program execution. A static initialization will suffice
 	static {
 		now = Calendar.getInstance();
 	}
-	
-	public static int getAge(Calendar dob) {
-		if (dob.after(now)) {
+
+	public static String getAge(String dob) {
+		
+		if (dob.equals("null"))
+			return "null";
+		
+		int bDay = Integer.parseInt(dob);
+		int yNow = now.get(Calendar.YEAR);
+		
+		if (bDay > yNow) {
 			throw new IllegalArgumentException("Can't be born in the future");
 		}
-		int year1 = now.get(Calendar.YEAR);
-		int year2 = dob.get(Calendar.YEAR);
-		int age = year1 - year2;
-		int month1 = now.get(Calendar.MONTH);
-		int month2 = dob.get(Calendar.MONTH);
-		if (month2 > month1) {
-			age--;
-		} else if (month1 == month2) {
-			int day1 = now.get(Calendar.DAY_OF_MONTH);
-			int day2 = dob.get(Calendar.DAY_OF_MONTH);
-			if (day2 > day1) {
-				age--;
-			}
-		}
-		return age;
+	
+		return new Integer(yNow-bDay).toString();
+
+
+	}
+
+	public static String getYear(String date) {
+		String [] split = date.split("/");
+		if (split.length < 3)
+			return "null";
+		else return split[2];
 	}
 	
 	public static Calendar parseDate(String date) {
-		String[] split = date.split("/");
-		return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[0])-1, Integer.parseInt(split[1]));
-	}
+		  String[] split = date.split("/");
+		  return new GregorianCalendar(Integer.parseInt(split[2]), Integer.parseInt(split[0])-1, Integer.parseInt(split[1]));
+		}
 	
 	public static String[] fromCSV(String s) {
 		return s.split(",");
@@ -78,22 +82,22 @@ public class Util {
 		Integer res = new Integer(0);
 		for (Integer i : list)
 			res += i;
-		
+
 		return (res /= list.size());
 	}
-	
+
 	/* returns the (first) key with max value */
 	public static String retMax(HashMap<String, Integer> map) {
 		/* this will return max value in the hashmap */
 		int maxValueInMap = (Collections.max(map.values()));
-		
+
 		for (java.util.Map.Entry<String, Integer> entry : map.entrySet()) 
             if (entry.getValue()==maxValueInMap) {
                 return entry.getKey();
             }
 		return "null"; //it may not happen
 	}
-	
+
 	/* increments the value of 'key' */
 	public static void incValue(HashMap<String, Integer> map, String key) {
 		int value = 0;
@@ -105,18 +109,25 @@ public class Util {
 			map.put(key, 1);				
 
 	}
-	
-	public static String[] fromCSV(String s) {
-		return s.split(",");
+	/**
+	 * TO DO!
+	 * 
+	 * */
+	public static String discretizeAge(Integer age) {
+		return "young";
 	}
-	
-	public static String toCSV(String[] s) {
-		StringBuilder sb = new StringBuilder();
-		String separator = "";
-		for(String tmp : s) {
-			sb.append(separator).append(tmp);
-			separator = ",";
+
+	public static LatLng getCoordinates(String place) {
+		final Geocoder geocoder = new Geocoder();
+		GeocoderRequest request = new GeocoderRequestBuilder()
+				.setAddress(place).setLanguage("en")
+				.getGeocoderRequest();
+		GeocodeResponse response = geocoder.geocode(request);
+		if(!response.getResults().isEmpty()) {
+			// Pick the most relevant match
+			return response.getResults().get(0).getGeometry().getLocation();
+		} else {
+			return null;
 		}
-		return sb.toString();
 	}
 }

@@ -12,6 +12,8 @@ public class UserUtility {
 	public final static String AGE = "age";
 	public final static String HOMETOWN = "hometown";
 	public final static String LOCATION = "location";
+	public final static String HOMETOWN_NAME = "hometown_name";
+	public final static String LOCATION_NAME = "location_name";
 	public final static String NAME = "name";
 	public final static String FRIENDS = "friends";
 	public final static String FRIEND = "friend";

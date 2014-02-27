@@ -1,16 +1,3 @@
-/**
- * 
- * - aggiungere coordinate hometown e location
- * - pensare a come gestire attributi mancanti 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- */
-
 package converters;
 
 import java.io.File;
@@ -18,17 +5,49 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import utils.Util;
+
+import com.google.code.geocoder.model.LatLng;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 
+import facebook.RelationshipStatus;
 import main.UserPuker;
 import main.UsersGraph;
 import main.UserUtility;
 
+@SuppressWarnings("unused")
 public class DBCSCConverter implements Converter {
 	
 	private PrintWriter pw;
+
+	private static final String asset_folder = "./assets/MOC/";
+	
+	private static final int G_MALE = 0;	
+	private static final int G_FEMALE = 1;
+	private static final int AGE = 2;
+	private static final int RS_SINGLE = 3;
+	private static final int RS_IN_A_RELATIONSHIP = 4;
+	private static final int RS_ENGAGED = 5;
+	private static final int RS_MARRIED = 6;
+	private static final int RS_IN_AN_OPEN_RELATIONSHIP = 7;
+	private static final int RS_ITS_COMPLICATED = 8;
+	private static final int RS_SEPARATED = 9;
+	private static final int RS_DIVORCED = 10;
+	private static final int RS_WIDOWED = 11;
+	private static final int II_MALE = 12;
+	private static final int II_FEMALE = 13;
+	private static final int HOMETOWN_LATITUDE = 14;
+	private static final int HOMETOWN_LONGITUDE = 15;
+	private static final int LOCATION_LATITUDE = 16;
+	private static final int LOCATION_LONGITUDE = 17;
+	private static final int E_HIGH_SCHOOL = 18;
+	private static final int E_COLLEGE = 19;
+	private static final int E_GRADUATE_SCHOOL = 20;
+
+	private static final int PROFILE_ATTRIBUTES = 21;
+	
 
 	
 	public DBCSCConverter(String filename) throws FileNotFoundException {
@@ -53,6 +72,16 @@ public class DBCSCConverter implements Converter {
 		return false;
 	}
 	
+	private String genGraphMLAttr(Object[] profile) {
+		StringBuilder str = new StringBuilder(); 
+		Integer i = new Integer(0);
+		for (Object p : profile)  {
+			str.append("att_" + i.toString() + "=\"" +profile[i].toString() + "\" ");
+			i++;
+		}
+		return str.toString();	
+	}
+	
 	public void translate(UsersGraph g) {
 		
 		Graph graph = g.getGraph();
@@ -70,9 +99,99 @@ public class DBCSCConverter implements Converter {
 		
 
 		for (Vertex u : users) {
+						
+			Object[] profile = new Object[PROFILE_ATTRIBUTES];
+			for (int i=0; i<profile.length; ++i) { profile[i] = "0"; }
 
+			String s; /* working str */
+			
 			/* <node id="123456789" */
 			working_str.append("<node id=\"" + u.getId().toString() + "\" ");
+			
+			/****GENDER*****/
+			switch(u.getProperty(UserUtility.GENDER).toString()) {
+				case "male":
+					profile[G_MALE] = "1";
+					break;
+				case "female":
+					profile[G_FEMALE] = "1";
+					break;
+			}
+			
+			/*****AGE*****/
+			profile[AGE] = Util.getAge(u.getProperty(UserUtility.BIRTHDAY).toString());
+			
+			
+			/****REL_STATUS****/
+			s = u.getProperty(UserUtility.REL_STATUS).toString();
+			if(s != null && !s.equals("null")) {
+				switch(s) {
+				case RelationshipStatus.SINGLE:
+					profile[RS_SINGLE] = "1";
+					break;
+				case RelationshipStatus.IN_A_RELATIONSHIP:
+					profile[RS_IN_A_RELATIONSHIP] = "1";
+					break;
+				case RelationshipStatus.ENGAGED:
+					profile[RS_ENGAGED] = "1";
+					break;
+				case RelationshipStatus.MARRIED:
+					profile[RS_MARRIED] = "1";
+					break;
+				case RelationshipStatus.IN_AN_OPEN_RELATIONSHIP:
+					profile[RS_IN_AN_OPEN_RELATIONSHIP] = "1";
+					break;
+				case RelationshipStatus.ITS_COMPLICATED:
+					profile[RS_ITS_COMPLICATED] = "1";
+					break;
+				case RelationshipStatus.SEPARATED:
+					profile[RS_SEPARATED] = "1";
+					break;
+				case RelationshipStatus.DIVORCED:
+					profile[RS_DIVORCED] = "1";
+					break;
+				case RelationshipStatus.WIDOWED:
+					profile[RS_WIDOWED] = "1";
+					break;
+				}
+			} //else all profile education-element are setted to 0 
+
+			/*** INTERESTED IN****/
+			switch(u.getProperty(UserUtility.INTERESTED_IN).toString()) {
+				case "male":
+					profile[II_MALE] = "1";
+					break;
+				case "female":
+					profile[II_FEMALE] = "1";
+					break;
+			}
+			
+			/****HOMETOWN*****/
+			s = u.getProperty(UserUtility.HOMETOWN_NAME).toString();
+			System.out.println("********************* " + s);
+			if(s != null && !s.equals("null")) {
+				LatLng coords = Util.getCoordinates(s);
+				profile[HOMETOWN_LATITUDE] = coords.getLat();
+				profile[HOMETOWN_LONGITUDE] = coords.getLng();
+			}
+			
+			
+			/***LOCATION***/
+			s = u.getProperty(UserUtility.LOCATION_NAME).toString();
+			if(s != null && !s.equals("null")) {
+				LatLng coords = Util.getCoordinates(s);
+				profile[LOCATION_LATITUDE] = coords.getLat();
+				profile[LOCATION_LONGITUDE] = coords.getLng();
+			}
+			
+			/***EDUCATION****/
+			String[] vec = Util.fromXSV(u.getProperty(UserUtility.EDUCATION).toString(), ",");
+			profile[E_HIGH_SCHOOL] = vec[0];
+			profile[E_COLLEGE] = vec[1];
+			profile[E_GRADUATE_SCHOOL] = vec[2];
+			
+			
+			attribute.append(genGraphMLAttr(profile));
 			
 			/* get the _user_ like */
 			user_likes = u.getVertices(Direction.BOTH, "likes");
@@ -87,42 +206,22 @@ public class DBCSCConverter implements Converter {
 			}
 			working_str.append("/>\n");
 			
-
-			
 			for (Vertex f : u.getVertices(Direction.BOTH, "friend")) {
-
-				/*
-				 * Code to add no duplicate edge:
-				 * the general idea is to adding an edge between id1 and id2 (friends)
-				 * if and only if id1>id2. But if id1 is DAU and id2 is not DAU
-				 * then id2 does not contain an edge to her friend id1, so in that
-				 * case an edge between id1 and id2 is added anyway. 
-				 * Moreover if id1 is non-DAU and id2 is DAU then no any edge is added
-				 * between them (because when it is the turn of id2 to be a User (and not a friend)
-				 * and and of id2 to be a Friend it will, for sure, add an edge between id2 and id1  
-				 */
-				if(u.getProperty(UserUtility.ISDAU) == Boolean.TRUE &&
-					   f.getProperty(UserUtility.ISDAU) == Boolean.FALSE) {
-						working_str.append("<edge source=\"" + u.getId().toString() +
-								"\" target=\"" + f.getId().toString() + "\"/>\n");					
-				} else {
-					if (u.getId().toString().compareTo(f.getId().toString()) > 0 &&
-						!(u.getProperty(UserUtility.ISDAU) == Boolean.FALSE &&
-						  f.getProperty(UserUtility.ISDAU) == Boolean.TRUE))
+				if (u.getId().toString().compareTo(f.getId().toString()) > 0)					
 						working_str.append("<edge source=\"" + u.getId().toString() +
 								"\" target=\"" + f.getId().toString() + "\"/>\n");
-				}
 			}
 			
 			
 			pw.write(working_str.toString(),0, working_str.length());
+			working_str.setLength(0);
 		}
 		pw.write("</graph>\n</graphml>");
 		pw.close();
 	}
 	
 	public static void main(String args[]) throws FileNotFoundException, IOException {
-		File inputFolder = new File("/home/np2k/Desktop/jx");
+		File inputFolder = new File("/home/np2k/Desktop/test_missing");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
