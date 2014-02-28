@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import metrics.Stats;
 import utils.Util;
 
 import com.tinkerpop.blueprints.Direction;
