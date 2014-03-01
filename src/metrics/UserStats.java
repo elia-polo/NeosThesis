@@ -1,12 +1,17 @@
 package metrics;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
 
@@ -21,12 +26,15 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
+import com.tinkerpop.blueprints.util.io.gml.GMLReader;
 
 public class UserStats {
 	/**
 	 * Map of &lt;attribute &lt;name,value&gt; , attribute count&gt; computed over the neighbours of this user, for all attributes Entry.name such that their value is missing for this user
 	 */
 	private HashMap<String, HashMap<Object,Integer>> stats;
+	
+	private List<SimpleEntry<String,Float>> missing_ratios;
 	
 	public UserStats() {
 		stats = new HashMap<String, HashMap<Object,Integer>>();
@@ -94,7 +102,9 @@ public class UserStats {
 		}
 		// Navigate the neighbours
 		Iterable<Vertex> neighbours = v.getVertices(Direction.BOTH, UserUtility.FRIEND);
+		int neighbour_count = 0;
 		for(Vertex n : neighbours) {
+			++neighbour_count;
 			for(String m : missing) { // For each missing attribute, if a neighbour has value v for that attribute, increment the count of v in the map 
 				s = n.getProperty(m);
 				if(!isNull(s)) {
@@ -109,6 +119,18 @@ public class UserStats {
 				}
 			}
 		}
+		result.missing_ratios = new ArrayList<SimpleEntry<String,Float>>();
+		for(Entry<String, HashMap<Object,Integer>> k : result.stats.entrySet()) {
+			// Find the null entry if it exists in the inner map
+			SimpleEntry<String,Float> entry = new SimpleEntry<String,Float>(k.getKey(), (float) 0);
+			for(Entry<Object, Integer> e : k.getValue().entrySet()) {
+				if(e.getKey().equals(null_key)) {
+					entry.setValue((float)100.0*(float)e.getValue()/(float)neighbour_count);
+					break;
+				}
+			}
+			result.missing_ratios.add(entry);
+		}
 		return result;
 	}
 	
@@ -119,6 +141,15 @@ public class UserStats {
 			for(Entry<Object, Integer> e : k.getValue().entrySet()) {
 				sb.append("\t").append(e.getKey().toString()).append(" = ").append(e.getValue()).append(System.lineSeparator());
 			}
+		}
+		return sb.toString();
+	}
+	
+	public String summary() {
+		DecimalFormat df = new DecimalFormat("#0.#");
+		StringBuilder sb = new StringBuilder();
+		for(Entry<String, Float> e : missing_ratios) {
+			sb.append(e.getKey().toString()).append(" : ").append(df.format(e.getValue())).append("%").append(System.lineSeparator());
 		}
 		return sb.toString();
 	}
@@ -136,19 +167,23 @@ public class UserStats {
 	
 	private static String[] getEduVec(ArrayList<EEducation> edu) {
 		String[] tmp = {"0","0","0"};
-		for(EEducation e: edu) {
-			switch(e.getType()) {
-			case UserUtility.HIGH_SCHOOL:
-				tmp[0] = "1";
-				break;
-			case UserUtility.COLLEGE:
-				tmp[1] = "1";
-				break;
-			case UserUtility.GRADUATE_SCHOOL:
-				tmp[2] = "1";
-				break;
-			default:
-				throw new IllegalArgumentException("Education type "+e.getType()+" does not exist");
+		if(edu != null) {
+			for (EEducation e : edu) {
+				if(e == null || e.getType() == null) continue;
+				switch (e.getType()) {
+				case UserUtility.HIGH_SCHOOL:
+					tmp[0] = "1";
+					break;
+				case UserUtility.COLLEGE:
+					tmp[1] = "1";
+					break;
+				case UserUtility.GRADUATE_SCHOOL:
+					tmp[2] = "1";
+					break;
+				default:
+					throw new IllegalArgumentException("Education type "
+							+ e.getType() + " does not exist");
+				}
 			}
 		}
 		return tmp;
@@ -178,33 +213,46 @@ public class UserStats {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static Graph loadFromJson() {
 		// Build graph from Json files
 		Graph graph = new TinkerGraph();
-		File[] files = new File("./assets/json.debug").listFiles();
-		for(File f : files) {
-			try (BufferedReader json = Files.newBufferedReader(f.toPath(), StandardCharsets.UTF_8)){
+//		File[] files = new File("C:/Programming/Git/json_users").listFiles();
+		 File[] files = new File("./assets/json.debug").listFiles();
+		for (File f : files) {
+			try (BufferedReader json = Files.newBufferedReader(f.toPath(),StandardCharsets.UTF_8)) {
 				JsonObject jsonObj = JsonObject.readFrom(json);
 				String s;
 				s = jsonObj.get(UserUtility.ID).asString();
-				if(debug) {if(debug) {System.out.println(UserUtility.ID+" "+s);}}
+				if (debug) {
+					if (debug) {
+						System.out.println(UserUtility.ID + " " + s);
+					}
+				}
 				Vertex user;
 				try {
 					user = graph.addVertex(s);
-				} catch (IllegalArgumentException e) { user = graph.getVertex(s); }
+				} catch (IllegalArgumentException e) {
+					user = graph.getVertex(s);
+				}
 				user.setProperty(UserUtility.ISDAU, f.getName().contains("DAU"));
 				s = asString(jsonObj.get(UserUtility.GENDER));
-				if(debug) {System.out.println(UserUtility.GENDER+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.GENDER + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.GENDER, s);
 				}
 				s = asString(jsonObj.get(UserUtility.REL_STATUS));
-				if(debug) {System.out.println(UserUtility.REL_STATUS+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.REL_STATUS + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.REL_STATUS, s);
 				}
 				s = getInterestedIn(jsonObj.get(UserUtility.INTERESTED_IN));
-				if(debug) {System.out.println(UserUtility.INTERESTED_IN+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.INTERESTED_IN + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.INTERESTED_IN, s);
 				}
@@ -216,50 +264,94 @@ public class UserStats {
 					else
 						s = split[2];
 				}
-				if(debug) {System.out.println(UserUtility.BIRTHDAY+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.BIRTHDAY + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.BIRTHDAY, s);
 				}
 				s = getHometown(jsonObj.get(UserUtility.HOMETOWN));
-				if(debug) {System.out.println(UserUtility.HOMETOWN+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.HOMETOWN + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.HOMETOWN, s);
 				}
 				s = getLocation(jsonObj.get(UserUtility.LOCATION));
-				if(debug) {System.out.println(UserUtility.LOCATION+" "+s);}
+				if (debug) {
+					System.out.println(UserUtility.LOCATION + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.LOCATION, s);
 				}
-				s = Util.toXSV(getEduVec(UserPuker.parseEducation(jsonObj)),",");
-				if(debug) {System.out.println(UserUtility.EDUCATION+" "+s);}
+				s = Util.toXSV(getEduVec(UserPuker.parseEducationNoTryCatch(jsonObj)),",");
+				if (debug) {
+					System.out.println(UserUtility.EDUCATION + " " + s);
+				}
 				if (s != null) {
 					user.setProperty(UserUtility.EDUCATION, s);
 				}
 				// Add friends, node and edges
-				ArrayList<String> friends = UserPuker.parseFriends(jsonObj, (Boolean) user.getProperty(UserUtility.ISDAU));
-				for(String fr : friends) {
-					Vertex friend;
-					try {
-						friend = graph.addVertex(fr);
-					} catch (IllegalArgumentException e) { friend = graph.getVertex(fr); }
-					String edge_id;
-					if (user.getId().toString().compareTo(friend.getId().toString()) > 0) 
-						edge_id = user.getId().toString()+ "-" + friend.getId().toString();
-					else
-						edge_id = friend.getId().toString() + "-" + user.getId().toString() ;
-					
-					try {
-						graph.addEdge(edge_id, user, friend, UserUtility.FRIEND);
-					} catch (IllegalArgumentException e) { /* do nothing */ }
+				ArrayList<String> friends = UserPuker.parseFriends(jsonObj,(Boolean) user.getProperty(UserUtility.ISDAU));
+				if (friends != null) {
+					for (String fr : friends) {
+						Vertex friend;
+						try {
+							friend = graph.addVertex(fr);
+						} catch (IllegalArgumentException e) {
+							friend = graph.getVertex(fr);
+						}
+						String edge_id;
+						if (user.getId().toString().compareTo(friend.getId().toString()) > 0)
+							edge_id = user.getId().toString() + "-" + friend.getId().toString();
+						else
+							edge_id = friend.getId().toString() + "-" + user.getId().toString();
+
+						try {
+							graph.addEdge(edge_id, user, friend,UserUtility.FRIEND);
+						} catch (IllegalArgumentException e) { /* do nothing */
+						}
+					}
 				}
 			} catch (IOException e) {
 				System.err.println("IO Exception in main\n" + e.getMessage());
 			}
 		}
-		Iterable<Vertex> users = graph.getVertices();
-		for(Vertex v : users) {
-			System.out.println("User " + v.getId());
-			System.out.println(UserStats.evaluate(v).toString()+"\n");
+		return graph;
+	}
+	
+	public static void main(String[] args) {
+		Graph graph;
+//		graph = loadFromJson();
+		try {
+			graph = new TinkerGraph();
+			GMLReader.inputGraph(graph, "./graph_backup.gml");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return;
+		}
+		// Save gml of the graph
+//		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("./graph.gml"))){
+//			GMLWriter.outputGraph(graph,bos);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		
+		try (BufferedWriter stat_file = Files.newBufferedWriter(Paths.get("./stats.txt"), StandardCharsets.UTF_8);
+				BufferedWriter stat_summary = Files.newBufferedWriter(Paths.get("./stats_summary.txt"), StandardCharsets.UTF_8)) {
+			Iterable<Vertex> users = graph.getVertices();
+			for (Vertex v : users) {
+				String s = "User " + v.getId()+System.lineSeparator();
+				stat_file.write(s);
+				stat_summary.write(s);
+				UserStats stat = UserStats.evaluate(v);
+				stat_summary.write(stat.summary());
+				stat_file.write(stat.toString());
+				stat_file.write(System.lineSeparator()+System.lineSeparator());
+				stat_summary.write(System.lineSeparator()+System.lineSeparator());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

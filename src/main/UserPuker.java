@@ -174,6 +174,42 @@ public class UserPuker {
 		}
 	}
 	
+	public static ArrayList<EEducation> parseEducationNoTryCatch(JsonObject o) {
+		/* creates an education array */
+		JsonValue tmp = o.get(UserUtility.EDUCATION);
+		if(tmp == null)
+			return null;
+		// Education is a JSON array, even if it contains a single element
+		JsonArray edu_array = tmp.asArray();
+		ArrayList<EEducation> edu_list = new ArrayList<EEducation>();
+		for (JsonValue single_edu : edu_array) {
+			/* single education element */
+			EEducation edu = new EEducation();
+			/* set edu 'type' fields */
+			tmp = single_edu.asObject().get(UserUtility.TYPE);
+			if(tmp != null)
+				edu.setType(tmp.asString());
+			/* if exists 'school' fields... */
+			try {
+				edu.setName_id(new CoupleNameId(single_edu.asObject()
+						.get(UserUtility.SCHOOL).asObject()
+						.get(UserUtility.NAME).asString(), single_edu
+						.asObject().get(UserUtility.SCHOOL).asObject()
+						.get(UserUtility.ID).asString()));
+			} catch (NullPointerException e) {
+				edu.setName_id(null);
+			}
+//			try {
+//				edu.setYear(single_edu.asObject().get(UserUtility.YEAR)
+//						.asObject().get_str_value(UserUtility.NAME));
+//			} catch (NullPointerException e) {
+//				edu.setYear(null);
+//			}
+			edu_list.add(edu);
+		}
+		return edu_list;
+	}
+	
 	public static ArrayList<String> parseFriends(JsonObject o, boolean isDAU) {
 		/* getting id friends */
 		JsonObject friends_obj;
@@ -192,6 +228,27 @@ public class UserPuker {
 		} catch (NullPointerException e) {
 			return null;
 		}
+	}
+	
+	public static ArrayList<String> parseFriendsNoTryCatch(JsonObject o, boolean isDAU) {
+		/* getting id friends */
+		String fr;
+		if (isDAU==true)
+			fr = UserUtility.FRIENDS;
+		else
+			fr = UserUtility.MUTUALFRIENDS;
+		JsonValue tmp = o.get(fr);
+		if(tmp == null)
+			return null;
+		JsonObject friends_obj = tmp.asObject();
+		// Even with no friends, there exists a data field of type array
+		JsonArray friends = friends_obj.get("data").asArray();
+		ArrayList<String> friends_id = new ArrayList<String>();
+		for (JsonValue f : friends) {
+			// If a friends exist, it always has an ID
+			friends_id.add(f.asObject().get(UserUtility.ID).asString());
+		}
+		return friends_id;
 	}
 	
 	public static void main(String args[])  throws Exception  {
