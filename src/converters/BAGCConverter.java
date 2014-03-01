@@ -17,8 +17,7 @@ import com.tinkerpop.blueprints.Vertex;
 import main.UserPuker;
 import main.UserUtility;
 import main.UsersGraph;
-
-@SuppressWarnings("unused")	 
+	 
 public class BAGCConverter  implements Converter {	
 	private static final String asset_folder = "/home/np2k/Desktop/BAGC/";
 	
@@ -59,7 +58,6 @@ public class BAGCConverter  implements Converter {
 			return res;
 		}
 	} 
-	
 	
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the BAGC clustering algorithm.
@@ -118,7 +116,10 @@ public class BAGCConverter  implements Converter {
 				 * age | gender | home | loc | rel_stat | int_in | HS | C | GS | like1 |...| likeN
 				 *(HS = high school, C = college, GS = graduate school -- in binary form)
 				 * */
-				line_attr = u.getProperty(UserUtility.AGE).toString() + SEPARATOR +
+				
+				Integer age = Integer.parseInt(u.getProperty(UserUtility.AGE).toString());
+				
+				line_attr = Util.discretizeAge(age) + SEPARATOR +
 				            u.getProperty(UserUtility.GENDER).toString() + SEPARATOR +
 				            u.getProperty(UserUtility.HOMETOWN).toString() + SEPARATOR +
 				            u.getProperty(UserUtility.LOCATION).toString() + SEPARATOR +
@@ -128,7 +129,7 @@ public class BAGCConverter  implements Converter {
 				            //a list of space-separated binary numbers (edu vector) 
 				            u.getProperty(UserUtility.EDUCATION).toString().replace(","," ") + SEPARATOR;
 				
-				/* get the _user_ like */
+				/* get the _user_ like (here Direction.OUT is enough) */
 				user_likes = u.getVertices(Direction.BOTH, "likes");
 				
 				/* likes binary vector */

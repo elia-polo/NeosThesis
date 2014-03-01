@@ -193,7 +193,7 @@ public class DBCSCConverter implements Converter {
 			
 			attribute.append(genGraphMLAttr(profile));
 			
-			/* get the _user_ like */
+			/* get the _user_ like (here Direction.OUT is enough) */
 			user_likes = u.getVertices(Direction.BOTH, "likes");
 			
 			/* for each user like */

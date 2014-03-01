@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
+
 import com.google.code.geocoder.Geocoder;
 import com.google.code.geocoder.GeocoderRequestBuilder;
 import com.google.code.geocoder.model.GeocodeResponse;
@@ -89,11 +90,29 @@ public class Util {
 	}
 
 	/**
-	 * TO DO!
+	 * Now very trivial discretize function with static label
+	 * 
+	 * TO DO: needing of the whole age set to make the function smart
+	 *        (i.e dynamically labeled age) 
+	 * 
+	 * @param age, numerical value to discretize
+	 * @return nominal value (very_young, young, not_so_young, not_young, not_so_old, old)
 	 * 
 	 * */
 	public static String discretizeAge(Integer age) {
-		return "young";
+		if (age < 20) 
+			return "very_young";
+		else if (age >= 20 && age < 30)
+			return "young";
+		else if (age >= 30 && age < 40)
+			return "not_so_young";
+		else if (age >=40 && age < 50)
+			return "not_young";
+		else if (age >= 50 && age < 60)
+			return "not_so_old";
+		else //(age >=60 )
+			return "old";
+		
 	}
 
 	public static LatLng getCoordinates(String place) {
