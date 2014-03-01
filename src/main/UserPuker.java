@@ -187,7 +187,7 @@ public class UserPuker {
 	}
 	
 	public static void main(String args[])  throws Exception  {
-		File inputFolder = new File("/home/np2k/Desktop/json_user");
+		File inputFolder = new File("/home/np2k/Desktop/json.debug");
 		
 		int count = 0;
 		for (File fn : inputFolder.listFiles()) {

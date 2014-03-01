@@ -469,7 +469,7 @@ public class UsersGraph {
 	
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
-		File inputFolder = new File("/home/np2k/Desktop/test_missing");
+		File inputFolder = new File("/home/np2k/Desktop/json.debug");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();
@@ -479,6 +479,7 @@ public class UsersGraph {
 		EUser u;
 		UserPuker j;
 		for (File f : files) {
+			System.out.println("ciao");
 			j = new  UserPuker(f.getAbsolutePath());
 			u = j.getEUser();
 			g.addUser(u);
@@ -493,7 +494,19 @@ public class UsersGraph {
 			//System.out.println(files.length-i);
 			//i++;
 		}
+		File output_net = new File("/home/np2k/Desktop", "net.debug.gml");
 		
+		BufferedOutputStream bos;
+		try {
+			bos = new BufferedOutputStream(new FileOutputStream(output_net));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+
+		GMLWriter.outputGraph(g.getGraph(),bos);
+
 
 		System.out.println("\n--------------------------DEBUG--------------------------");
 		
@@ -515,19 +528,19 @@ public class UsersGraph {
 		else
 			System.out.println("#graph vertex == #user+#likes!!!!!!");
 
-		File output_net = new File("/home/np2k/Desktop", "net.gml");
-		
-		BufferedOutputStream bos;
-		try {
-			bos = new BufferedOutputStream(new FileOutputStream(output_net));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-
-		GMLWriter.outputGraph(graph,bos);
-				
+//		File output_net = new File("/home/np2k/Desktop", "net.gml");
+//		
+//		BufferedOutputStream bos;
+//		try {
+//			bos = new BufferedOutputStream(new FileOutputStream(output_net));
+//		} catch (FileNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return;
+//		}
+//
+//		GMLWriter.outputGraph(graph,bos);
+//				
 		System.out.println("\nnodes number: " + vertex_coll.size());
 		System.out.println("edge number: " + edge_coll.size());
 		System.out.println("users number: " + g.getUsersNumber());
@@ -539,28 +552,29 @@ public class UsersGraph {
 		
 		System.out.println("\nuser_count: " + user_count);
 		System.out.println("likes_count: " + likes_count);
-		
-		//////////////////////////////////MISSING VALUE////////////////////////////////////////////////
-		Vertex a = graph.getVertex("1042024118");
-		Vertex n = graph.getVertex("1029116096");
-		System.out.println("\n\n*****************\ninferenza missing value...\n");
-		g.fillMissingValue(n);
-		g.fillMissingValue(a);
-		
-		Graph newgraph = new TinkerGraph();
-		newgraph.addVertex(n);
-		newgraph.addVertex(a);
-		
-		output_net =  new File("/home/np2k/Desktop", "newgraph.gml");
-		try {
-			bos = new BufferedOutputStream(new FileOutputStream(output_net));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-
-		GMLWriter.outputGraph(graph,bos);
+//		
+//		//////////////////////////////////MISSING VALUE////////////////////////////////////////////////
+//		Vertex a = graph.getVertex("1042024118");
+//		Vertex n = graph.getVertex("1029116096");
+//		System.out.println("\n\n*****************\ninferenza missing value...\n");
+//		g.fillMissingValue(n);
+//		g.fillMissingValue(a);
+//		
+//		Graph newgraph = new TinkerGraph();
+//		newgraph.addVertex(n);
+//		newgraph.addVertex(a);
+//		
+//		output_net =  new File("/home/np2k/Desktop", "newgraph.gml");
+//		try {
+//			bos = new BufferedOutputStream(new FileOutputStream(output_net));
+//		} catch (FileNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return;
+//		}
+//
+//		GMLWriter.outputGraph(graph,bos);
+//		System.out.println("see newgraph.gml");
 	}
 	
 	public float getMissingValueRatio(String field) {
