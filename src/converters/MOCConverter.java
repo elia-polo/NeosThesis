@@ -139,7 +139,7 @@ public class MOCConverter implements Converter {
 					profile[II_FEMALE] = "1";
 					break;
 				}
-				s = v.getProperty(UserUtility.HOMETOWN).toString();
+				s = v.getProperty(UserUtility.HOMETOWN_NAME).toString();
 				if(s != null && !s.equals("null")) {
 					LatLng coords = Util.getCoordinates(s);
 					if(coords != null) {
@@ -147,7 +147,7 @@ public class MOCConverter implements Converter {
 						profile[HOMETOWN_LONGITUDE] = coords.getLng();
 					} // else imputation is required TODO
 				}
-				s = v.getProperty(UserUtility.LOCATION).toString();
+				s = v.getProperty(UserUtility.LOCATION_NAME).toString();
 				if(s != null && !s.equals("null")) {
 					LatLng coords = Util.getCoordinates(s);
 					profile[LOCATION_LATITUDE] = coords.getLat();

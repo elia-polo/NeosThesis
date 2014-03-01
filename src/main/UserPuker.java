@@ -68,35 +68,7 @@ public class UserPuker {
 		}
 		
 		/* if exists education field */
-		try {
-			/* creates an education array */
-			
-			JsonArray edu_array = jsonObj.get(UserUtility.EDUCATION).asArray();
-			
-			ArrayList<EEducation> edu_list = new ArrayList<EEducation>();
-			
-			for (JsonValue single_edu : edu_array)
-			{
-				/* single education element */
-				EEducation edu = new EEducation();
-				
-				/* set edu 'type' fields */
-				edu.setType(single_edu.asObject().get_str_value(UserUtility.TYPE));
-				
-				/* if exists 'school' fields... */
-				try {
-					edu.setName_id(new CoupleNameId(single_edu.asObject().get(UserUtility.SCHOOL).asObject().get_str_value(UserUtility.NAME),
-								   single_edu.asObject().get(UserUtility.SCHOOL).asObject().get_str_value(UserUtility.ID)));
-				} catch (NullPointerException e) { edu.setName_id(null); }
-				
-				try  {
-					edu.setYear(single_edu.asObject().get(UserUtility.YEAR).asObject().get_str_value(UserUtility.NAME));
-				} catch (NullPointerException e) { edu.setYear(null); }
-				
-				edu_list.add(edu);
-			}
-			user.setEdu(edu_list);
-		} catch(NullPointerException e) { user.setEdu(null); }
+		user.setEdu(parseEducation(jsonObj));
 		
 		/* getting hometown&location fields */
 		JsonValue where_obj;
@@ -119,25 +91,7 @@ public class UserPuker {
 		} catch(NullPointerException e) { user.setLocation(null); }
 		
 		/* getting id friends */
-		JsonObject friends_obj;
-		
-		String fr;
-		if (user.isDAU()==true) fr = UserUtility.FRIENDS;
-		else fr = UserUtility.MUTUALFRIENDS;
-		
-		try {
-
-			friends_obj = jsonObj.get(fr).asObject();
-			JsonArray friends = friends_obj.get("data").asArray();
-			ArrayList<String> friends_id = new ArrayList<String>();
-			
-			for (JsonValue f : friends) 
-				friends_id.add(f.asObject().get_str_value(UserUtility.ID));
-			
-		
-			user.setFriends(friends_id);
-		} catch (NullPointerException e) { user.setFriends(null); }
-		
+		user.setFriends(parseFriends(jsonObj, user.isDAU()));		
 		
 		/* getting like objects */
 		JsonObject likes_obj;
@@ -184,6 +138,60 @@ public class UserPuker {
 		} catch(NullPointerException e) { user.setLikes(null); }
 		
 		return user;
+	}
+	
+	public static ArrayList<EEducation> parseEducation(JsonObject o) {
+		try {
+			/* creates an education array */
+			JsonArray edu_array = o.get(UserUtility.EDUCATION).asArray();
+			ArrayList<EEducation> edu_list = new ArrayList<EEducation>();
+			for (JsonValue single_edu : edu_array) {
+				/* single education element */
+				EEducation edu = new EEducation();
+				/* set edu 'type' fields */
+				edu.setType(single_edu.asObject().get_str_value(UserUtility.TYPE));
+				/* if exists 'school' fields... */
+				try {
+					edu.setName_id(new CoupleNameId(single_edu.asObject()
+							.get(UserUtility.SCHOOL).asObject()
+							.get_str_value(UserUtility.NAME), single_edu
+							.asObject().get(UserUtility.SCHOOL).asObject()
+							.get_str_value(UserUtility.ID)));
+				} catch (NullPointerException e) {
+					edu.setName_id(null);
+				}
+				try {
+					edu.setYear(single_edu.asObject().get(UserUtility.YEAR)
+							.asObject().get_str_value(UserUtility.NAME));
+				} catch (NullPointerException e) {
+					edu.setYear(null);
+				}
+				edu_list.add(edu);
+			}
+			return edu_list;
+		} catch (NullPointerException e) {
+			return null;
+		}
+	}
+	
+	public static ArrayList<String> parseFriends(JsonObject o, boolean isDAU) {
+		/* getting id friends */
+		JsonObject friends_obj;
+		String fr;
+		if (isDAU==true)
+			fr = UserUtility.FRIENDS;
+		else
+			fr = UserUtility.MUTUALFRIENDS;
+		try {
+			friends_obj = o.get(fr).asObject();
+			JsonArray friends = friends_obj.get("data").asArray();
+			ArrayList<String> friends_id = new ArrayList<String>();
+			for (JsonValue f : friends) 
+				friends_id.add(f.asObject().get_str_value(UserUtility.ID));
+			return friends_id;
+		} catch (NullPointerException e) {
+			return null;
+		}
 	}
 	
 	public static void main(String args[])  throws Exception  {
