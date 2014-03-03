@@ -22,7 +22,7 @@ public class DBCSCConverter implements Converter {
 	
 	private PrintWriter pw;
 
-	private static final String asset_folder = "./assets/MOC/";
+	private static final String asset_folder = "./assets/DBCSC/";
 	
 	private static final int G_MALE = 0;	
 	private static final int G_FEMALE = 1;

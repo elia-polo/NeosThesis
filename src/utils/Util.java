@@ -2,9 +2,11 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+
 
 
 import com.google.code.geocoder.Geocoder;
@@ -137,6 +139,16 @@ public class Util {
 		return s.split(separator);
 	}
 
+	public static <E> String toXSV(Collection<E> o, String separator) {
+		StringBuilder sb = new StringBuilder();
+		String sep = "";
+		for (E tmp : o) {
+			sb.append(sep).append(tmp.toString());
+			sep = separator;
+		}
+		return sb.toString();
+	}
+	
 	public static String toXSV(Object[] o, String separator) {
 		StringBuilder sb = new StringBuilder();
 		String sep = "";
@@ -146,7 +158,7 @@ public class Util {
 		}
 		return sb.toString();
 	}
-
+	
 	public static String[] fromCSV(String s) {
 		return s.split(",");
 	}

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import main.UserUtility;
@@ -51,13 +52,27 @@ public class MOCConverter implements Converter {
 
 	private static final int PROFILE_ATTRIBUTES = 21;
 	
+	public static enum DATA_DENSITY {
+		DENSE, SPARSE;
+	}
+	
+	private DATA_DENSITY density = DATA_DENSITY.SPARSE;
+	
+	public void setDataDensity(DATA_DENSITY density) {
+		this.density = density;
+	}
+	
 	/**
 	 * <p>Converts a UsersGraph into a dataset file suitable for the MOC clustering algorithm.</p>
 	 * The expected input is a matrix <b>M</b> with <b>N</b> rows and <b>D</b> columns, where N is the number of samples and D the number of features.<br>
 	 * The element M<sub>ij</sub> is the j<sup>th</sup> feature of the i<sup>th</sup> element of the dataset.<br>
 	 * Numeric attributes are kept numeric, while categoric attributes are converted to a binary representation.
 	 * This effectively increases the number of dimensions by the size of the domain of each attribute (which is dominated by the number of like entities in the dataset)<br>
-	 * The output file is a sequence of TSV (Tab Separated Values) lines, each one associated to a row of the data matrix. All rows have the same number of elements, in the same order.
+	 * The output file depends on the dimensionality of the data.<br>
+	 * For dense data, it is a sequence of TSV (Tab Separated Values) lines, each one associated to a row of the data matrix.
+	 * All rows have the same number of elements, in the same order.
+	 * For sparse data, the matrix is encoded as a list of coordinates (COO format), producing a three-column file whose
+	 * first column is a list of row indices, second column is a list of column indices, and third column is a list of nonzero values.<br>
 	 * The columns are as follows:<br>
 	 * <ol>
 	 * <li>GENDER {MALE, FEMALE}</li>
@@ -78,19 +93,27 @@ public class MOCConverter implements Converter {
 		long start_time = System.currentTimeMillis();
 		// Clear folder
 		for(File file: new File(asset_folder).listFiles()) file.delete();
+		if(density == DATA_DENSITY.SPARSE)
+			translateSparse(g);
+		else
+			translateDense(g);
+		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");
+	}
+
+	private void translateDense(UsersGraph g) {
 		try (BufferedWriter users = Files.newBufferedWriter(Paths.get(asset_folder+"users.txt"), StandardCharsets.UTF_8);
 				BufferedWriter dataset = Files.newBufferedWriter(Paths.get(asset_folder+"dataset.txt"), StandardCharsets.UTF_8)) {
-			HashMap<String,Integer> like_map = new HashMap<String,Integer>();
+			Map<String,Integer> like_map = new HashMap<String,Integer>();
 			final int likes_count = g.statistics.getLikeCount();
 			int like_id = -1;
 			for (Vertex v : g.getGraph().getVertices(UserUtility.WHOAMI,"user")) {
 				String s = v.getId()+"\t";
-				users.write(s,0,s.length());
+				users.write(s);
 				Object[] profile = new Object[PROFILE_ATTRIBUTES];
 				for(int i=0; i<profile.length; ++i) {
 					profile[i] = "0";
 				}
-				switch(v.getProperty(UserUtility.GENDER).toString()) {
+				switch((String) v.getProperty(UserUtility.GENDER)) {
 				case "male":
 					profile[G_MALE] = "1";
 					break;
@@ -98,8 +121,8 @@ public class MOCConverter implements Converter {
 					profile[G_FEMALE] = "1";
 					break;
 				}
-				profile[AGE] = Util.getAge(v.getProperty(UserUtility.BIRTHDAY).toString());
-				s = v.getProperty(UserUtility.REL_STATUS).toString();
+				profile[AGE] = Util.getAge((String) v.getProperty(UserUtility.BIRTHDAY));
+				s = (String) v.getProperty(UserUtility.REL_STATUS);
 				if(s != null && !s.equals("null")) {
 					switch(s) {
 					case RelationshipStatus.SINGLE:
@@ -131,7 +154,7 @@ public class MOCConverter implements Converter {
 						break;
 					}
 				}
-				switch(v.getProperty(UserUtility.INTERESTED_IN).toString()) {
+				switch((String) v.getProperty(UserUtility.INTERESTED_IN)) {
 				case "male":
 					profile[II_MALE] = "1";
 					break;
@@ -139,7 +162,7 @@ public class MOCConverter implements Converter {
 					profile[II_FEMALE] = "1";
 					break;
 				}
-				s = v.getProperty(UserUtility.HOMETOWN_NAME).toString();
+				s = v.getProperty(UserUtility.HOMETOWN_NAME);
 				if(s != null && !s.equals("null")) {
 					LatLng coords = Util.getCoordinates(s);
 					if(coords != null) {
@@ -147,18 +170,28 @@ public class MOCConverter implements Converter {
 						profile[HOMETOWN_LONGITUDE] = coords.getLng();
 					} // else imputation is required TODO
 				}
-				s = v.getProperty(UserUtility.LOCATION_NAME).toString();
+				s = v.getProperty(UserUtility.LOCATION_NAME);
 				if(s != null && !s.equals("null")) {
 					LatLng coords = Util.getCoordinates(s);
-					profile[LOCATION_LATITUDE] = coords.getLat();
-					profile[LOCATION_LONGITUDE] = coords.getLng();
+					if(coords != null) {
+						profile[LOCATION_LATITUDE] = coords.getLat();
+						profile[LOCATION_LONGITUDE] = coords.getLng();
+					}
 				}
-				String[] vec = Util.fromXSV(v.getProperty(UserUtility.EDUCATION).toString(), ",");
-				profile[E_HIGH_SCHOOL] = vec[0];
-				profile[E_COLLEGE] = vec[1];
-				profile[E_GRADUATE_SCHOOL] = vec[2];
+				s = v.getProperty(UserUtility.HIGH_SCHOOL);
+				if(s != null) {
+					profile[E_HIGH_SCHOOL] = s;
+				}
+				s = v.getProperty(UserUtility.COLLEGE);
+				if(s != null) {
+					profile[E_COLLEGE] = s;
+				}
+				s = v.getProperty(UserUtility.GRADUATE_SCHOOL);
+				if(s != null) {
+					profile[E_GRADUATE_SCHOOL] = s;
+				}
 				s = Util.toXSV(profile, "\t");
-				dataset.write(s, 0, s.length());
+				dataset.write(s);
 				
 				// Likes are dealt with this way:
 				// Collect all likes for the current user, insert them in the likes map if necessary and into a set, identifying them by the unique index provided by the map.
@@ -171,7 +204,7 @@ public class MOCConverter implements Converter {
 				// Compute the new difference, using the next like, which is 7. 7 - 5 is 2, therefore output a string made of 2 '\t'.
 				// Output the like identifier of 7 followed by a '\t'. Advance the index to 8
 				// When the last like has been processed, compute the difference between the total number of likes and the current index, then output as many '\t'
-
+	
 				TreeSet<Integer> user_likes = new TreeSet<Integer>();
 				for (Edge e : v.getEdges(Direction.OUT, UserUtility.LIKES)) {
 					// A like edge is always (tail) user -> like (head). Edge.getVertex(Direction) returns the tail/out or head/in vertex.
@@ -189,21 +222,155 @@ public class MOCConverter implements Converter {
 					if(like != null) {
 						// Fill the gap between index and like
 						s = new String(new char[like-index]).replace("\0", "\t")+like+"\t"; // create String of n times '\t' followed by the current like and terminated by '\t'
-						dataset.write(s, 0, s.length());
+						dataset.write(s);
 						index = like +1;
 					} else { // Fill the range between index and likes_count with '\t'
 						s = new String(new char[likes_count-index]).replace("\0", "\t"); // create String of n times '\t'
-						dataset.write(s, 0, s.length());
+						dataset.write(s);
 						break;
 					}
 				}
 				s = System.lineSeparator();
-				dataset.write(s, 0, s.length());
+				dataset.write(s);
+			}
+			if(!like_map.isEmpty()) {
+				try(BufferedWriter like = Files.newBufferedWriter(Paths.get(asset_folder+"like.txt"), StandardCharsets.UTF_8)){
+					for (Map.Entry<String, Integer> entry : like_map.entrySet()) {
+						String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+						like.write(s);
+					}
+				} catch (IOException e) {
+					System.err.format("IOException: %s%n", e);
+				}			
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");
 	}
-
+	
+	private void translateSparse(UsersGraph g) {
+		try (BufferedWriter users = Files.newBufferedWriter(Paths.get(asset_folder+"users.txt"), StandardCharsets.UTF_8);
+				BufferedWriter dataset = Files.newBufferedWriter(Paths.get(asset_folder+"dataset.txt"), StandardCharsets.UTF_8)) {
+			Map<String,Integer> like_map = new HashMap<String,Integer>();
+			int like_id = -1;
+			// Rows and columns are indexed starting from 1
+			int user_row = 0;
+			for (Vertex v : g.getGraph().getVertices(UserUtility.WHOAMI,"user")) {
+				users.write(v.getId()+"\t"+String.valueOf(++user_row)+System.lineSeparator());
+				Object[] profile = new Object[PROFILE_ATTRIBUTES];
+				for(int i=0; i<profile.length; ++i) {
+					profile[i] = "0";
+				}
+				switch((String) v.getProperty(UserUtility.GENDER)) {
+				case "male":
+					profile[G_MALE] = "1";
+					break;
+				case "female":
+					profile[G_FEMALE] = "1";
+					break;
+				}
+				profile[AGE] = Util.getAge((String) v.getProperty(UserUtility.BIRTHDAY));
+				String s = v.getProperty(UserUtility.REL_STATUS);
+				if(s != null && !s.equals("null")) {
+					switch(s) {
+					case RelationshipStatus.SINGLE:
+						profile[RS_SINGLE] = "1";
+						break;
+					case RelationshipStatus.IN_A_RELATIONSHIP:
+						profile[RS_IN_A_RELATIONSHIP] = "1";
+						break;
+					case RelationshipStatus.ENGAGED:
+						profile[RS_ENGAGED] = "1";
+						break;
+					case RelationshipStatus.MARRIED:
+						profile[RS_MARRIED] = "1";
+						break;
+					case RelationshipStatus.IN_AN_OPEN_RELATIONSHIP:
+						profile[RS_IN_AN_OPEN_RELATIONSHIP] = "1";
+						break;
+					case RelationshipStatus.ITS_COMPLICATED:
+						profile[RS_ITS_COMPLICATED] = "1";
+						break;
+					case RelationshipStatus.SEPARATED:
+						profile[RS_SEPARATED] = "1";
+						break;
+					case RelationshipStatus.DIVORCED:
+						profile[RS_DIVORCED] = "1";
+						break;
+					case RelationshipStatus.WIDOWED:
+						profile[RS_WIDOWED] = "1";
+						break;
+					}
+				}
+				switch((String) v.getProperty(UserUtility.INTERESTED_IN)) {
+				case "male":
+					profile[II_MALE] = "1";
+					break;
+				case "female":
+					profile[II_FEMALE] = "1";
+					break;
+				}
+				s = v.getProperty(UserUtility.HOMETOWN_NAME);
+				if(s != null && !s.equals("null")) {
+					LatLng coords = Util.getCoordinates(s);
+					if(coords != null) {
+						profile[HOMETOWN_LATITUDE] = coords.getLat();
+						profile[HOMETOWN_LONGITUDE] = coords.getLng();
+					} // else imputation is required TODO
+				}
+				s = v.getProperty(UserUtility.LOCATION_NAME);
+				if(s != null && !s.equals("null")) {
+					LatLng coords = Util.getCoordinates(s);
+					if(coords != null) {
+						profile[LOCATION_LATITUDE] = coords.getLat();
+						profile[LOCATION_LONGITUDE] = coords.getLng();
+					}
+				}
+				s = v.getProperty(UserUtility.HIGH_SCHOOL);
+				if(s != null) {
+					profile[E_HIGH_SCHOOL] = s;
+				}
+				s = v.getProperty(UserUtility.COLLEGE);
+				if(s != null) {
+					profile[E_COLLEGE] = s;
+				}
+				s = v.getProperty(UserUtility.GRADUATE_SCHOOL);
+				if(s != null) {
+					profile[E_GRADUATE_SCHOOL] = s;
+				}
+				StringBuilder sb = new StringBuilder();
+				for(int i=0; i<profile.length; ++i) { // row column value
+					sb.append(user_row).append("\t").append(String.valueOf(i)).append("\t").append(profile[i].toString()).append(System.lineSeparator());
+				}
+				dataset.write(sb.toString());
+	
+				TreeSet<Integer> user_likes = new TreeSet<Integer>(); // This way likes are given always the same ordering in the resulting matrix (each like a column)
+				for (Edge e : v.getEdges(Direction.OUT, UserUtility.LIKES)) {
+					// A like edge is always (tail) user -> like (head). Edge.getVertex(Direction) returns the tail/out or head/in vertex.
+					Vertex l = e.getVertex(Direction.IN);
+					Integer like_remapped_id;
+					if((like_remapped_id = like_map.get(l.getId())) == null) {
+						like_map.put(l.getId().toString(), ++like_id);
+						like_remapped_id = like_id;
+					}
+					user_likes.add(like_remapped_id);
+				}
+				for(Integer like : user_likes) {
+					dataset.write(String.valueOf(user_row)+"\t"+like.toString()+"\t1"+System.lineSeparator()); // row(user) column(like) 1(does like)
+				}
+			}
+			if(!like_map.isEmpty()) {
+				try(BufferedWriter like = Files.newBufferedWriter(Paths.get(asset_folder+"like.txt"), StandardCharsets.UTF_8)){
+					for (Map.Entry<String, Integer> entry : like_map.entrySet()) {
+						String s = entry.getValue()+"\t"+entry.getKey()+System.lineSeparator();
+						like.write(s);
+					}
+				} catch (IOException e) {
+					System.err.format("IOException: %s%n", e);
+				}			
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

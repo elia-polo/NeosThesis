@@ -154,7 +154,6 @@ public class Stats {
 		sb.append("Hometown missing ratio: ").append(df.format(100-100.0*hometown/user_count)).append("%").append(System.lineSeparator());
 		sb.append("Location missing ratio: ").append(df.format(100-100.0*location/user_count)).append("%").append(System.lineSeparator());
 		sb.append("Friends missing ratio: ").append(df.format(100-100.0*friends/user_count)).append("%").append(System.lineSeparator());
-//		sb.append("MutualFriends missing ratio: ").append(Float.toString((1-(float)mutual_friends/user_count)*100)).append("%").append(System.lineSeparator());
 		sb.append("Likes missing ratio: ").append(df.format(100-100.0*likes/user_count)).append("%").append(System.lineSeparator());
 		sb.append("Education missing ratio: ").append(df.format(100-100.0*education/user_count)).append("%").append(System.lineSeparator());
 		sb.append("HighSchool missing ratio: ").append(df.format(100-100.0*high_school/user_count)).append("%").append(System.lineSeparator());
