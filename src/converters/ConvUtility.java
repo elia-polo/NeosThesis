@@ -6,23 +6,15 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
 
-class TwoObj { 
-	Object obj1;
-	Object obj2;
-	
-	public TwoObj(Object o1, Object o2) {
-		obj1 = o1;
-		obj2 = o2;
-	}
-	
-	public TwoObj() { /* do nothing */ }
 
-	public Object getObj1() { return obj1; }
-	public void setObj1(Object obj1) { this.obj1 = obj1; }
-	public Object getObj2() { return obj2; }
-	public void setObj2(Object obj2) { this.obj2 = obj2; }
-}
-
+/**
+ * HashMapWL (With Last) extends HashMap to achieve
+ * the goal of having the last inserted element in the hashmap
+ * 
+ * NB: the last stored element is intended to be the __value__
+ * of the last entry
+ *  
+ * */
 class HashMapWL<K,V> extends HashMap<K, V> {
 	private static final long serialVersionUID = 1L;
 	private V last;
@@ -93,85 +85,113 @@ public class ConvUtility {
 		return getIncId(map, id, 0);
 	}
 	
-	public static TwoObj getAndCountIncId(HashMap<String, HashMapWL<String, TwoObj>> map, 
-										  String id, 
-										  int start_from, 
-										  HashMap<String, Integer>attr_offset)
+	/**
+	 * The 'map' argument is an hashmap with a key String (e.g. containing the attributes name)
+	 * and an hashmap as the value element. This inner hashmap is a with a key String (containing
+	 * the couple attribute_name=attribute_value (NB: '='-separated)) and an Integer value
+	 * representing the incremental __inner__ id of the specified couple. The inner id depends
+	 * on the domains cardinality (a-priori known) of the attributes already present in the map.
+	 * 
+	 * _____Example_____
+	 * 
+	 * Let's have two attributes (age and gender). The cardinality of each attribute
+	 * is specified by the attrs_cardinality argument, let's now suppose that is 5 
+	 * for the age and 2 for the gender. Moreover, the couples attribute-value are: 
+	 * age=young, age=old, gender=male, gender=female.
+	 * 
+	 * Suppose that the map already contains the age values: 
+	 * {
+	 *     _age_     { {age    = young, 1}, { age    = old,    2 }, { age = null, 3 }  }
+	 * }
+	 * 
+	 * Now, arrive the gender values, so the map would be
+	 * {
+	 *   _age_     { {age    = young, 1}, { age    = old,    2 }, { age = null, 3 } , 
+	 *   _gender_  { {gender = male,  6}, { gender = female, 5 } } 
+	 * }
+	 * 
+	 * The first gender=value id is calculate as the sum of the already present attributes domains  
+	 * cardinality (in these case only age with a card equal to 5) plus 1.
+	 * 
+	 * Let's moreover suppose to have a new incoming couple age=very_young the method updates
+	 * the hashmap to:
+	 * {
+	 *   _age_     { ...... , {age=very_young, 4} }
+	 *   ... 
+	 * }
+	 * and returs an Integer object equal to 4.
+	 * 
+	 * Note1: The method uses also a start_from int parameter, in these case all the ids is
+	 *        start_from-shifted (i.e. the first couple of the first attribute name begins  
+	 *        from 'start_from' and not from '1')
+	 * 
+	 * Note2: The method uses an Integer 'os' (OffSet) (mut. excl. to attrs_cardinality): in this way
+	 *        it is likely to have a attrs_cardinality map with a fixed cardinality for each attributes. 
+	 *      
+	 *
+	 * NB: in the above example the whitespacea between an attribute name, the '=' and the attribute value 
+	 *     are used only for a graphical representation, the real format is name=value, without whitespace.
+	 *     
+	 * @param map
+	 * @param couple
+	 * @param start_from
+	 * @param attrs_cardinality
+	 * @param os
+	 * 
+	 * @return the incremental __inner__ id for couple name=value 
+	 *          
+	 * 
+	 * */
+	public static Integer getIncIdHMS(HashMap<String, HashMapWL<String, Integer>> map, 
+										   String couple, 
+										   int start_from, 
+										   HashMap<String, Integer>attrs_cardinality, Integer os) 
 	{
-		String attr_name = id.split("=")[0];
+		if (attrs_cardinality == null && os == null) 
+				throw new IllegalArgumentException("'attr_offset and' and 'os' parameters" +
+		                                            "cannot be simultaneously null.");
+		String attr_name = couple.split("=")[0];
 		
-		HashMapWL<String, TwoObj> spec_map;
+		HashMapWL<String, Integer> spec_map;
 		Integer offset = new Integer(0);
+		Integer res;
 
-		TwoObj t;
 		if (map.containsKey(attr_name)) {
 			spec_map = map.get(attr_name);
 			
-			if (spec_map.containsKey(id)) {
-				t = spec_map.get(id);	
-				t.setObj2((Integer) t.getObj2() + 1);
-				spec_map.put(id, t);
+			if (spec_map.containsKey(couple)) {
+				return spec_map.get(couple);
+				
+			} else {
+				res = (Integer)spec_map.getLast() + 1;
+				spec_map.put(couple, res );
 				map.put(attr_name, spec_map);
-				return t;
-			} else {	
-				t = new TwoObj((Integer)(((TwoObj)(spec_map.getLast())).getObj1())+1, 1);
-				spec_map.put(id, t);
-				map.put(attr_name, spec_map);
-				return t;
+				return res;
 			}
 		} else {
 			//compute offset
-			for (String a : map.keySet()) {
-				offset += attr_offset.get(a);
+			if (os == null) {
+				for (String a : map.keySet()) 
+					try {
+						offset += attrs_cardinality.get(a); 
+					} catch (NullPointerException e) {
+						throw new IllegalArgumentException("no domain cardinality found for " +
+					                                       a + " attribute.");
+					}
 			}
-
-			spec_map = new HashMapWL<String, TwoObj>();
+			else {
+				offset = os * map.size();
+			}
 			
-			t = new TwoObj(new Integer(1 + start_from + offset), 1);
-			spec_map.put(id, t);
+			spec_map = new HashMapWL<String, Integer>();
+		
+			res = 1 + start_from + offset;
+			spec_map.put(couple, res);
 			map.put(attr_name, spec_map);
-			return t;
+			return res;
 		}
 	}
-	
-	public static TwoObj getAndCountIncId(HashMap<String, HashMapWL<String, TwoObj>> map, 
-			  String id, 
-			  int start_from,
-			  int os)
-	{
-			String attr_name = id.split("=")[0];
-			int offset = 0;
-			HashMapWL<String, TwoObj> spec_map;
-			
-			TwoObj t;
-			if (map.containsKey(attr_name)) {
-				spec_map = map.get(attr_name);
-			
-				if (spec_map.containsKey(id)) {
-					t = spec_map.get(id);	
-					t.setObj2((Integer) t.getObj2() + 1);
-					spec_map.put(id, t);
-					map.put(attr_name, spec_map);
-					return t;
-				} else {	
-					t = new TwoObj((Integer)(((TwoObj)(spec_map.getLast())).getObj1())+1, 1);
-					spec_map.put(id, t);
-					map.put(attr_name, spec_map);
-					return t;
-				}
-			} else {
-				spec_map = new HashMapWL<String, TwoObj>();
-				offset = os * map.size();
-				t = new TwoObj(new Integer(1 + start_from + offset), 1);
-				spec_map.put(id, t);
-				map.put(attr_name, spec_map);
-				return t;
-			}
-	}
-
-	
-	
-	
+		
 	/**
 	 * given the set of string arguments the method returns 
 	 * a String separated with the 'sep' Character and
@@ -193,5 +213,41 @@ public class ConvUtility {
 	
 		return res.toString();
 	}
-	
 }
+
+
+/*	public static Integer getIncIdHMS(HashMap<String, HashMapWL<String, Integer>> map, 
+String id, 
+int start_from,
+int os)
+{
+int offset = 0 ;
+
+String attr_name = id.split("=")[0];
+
+HashMapWL<String, Integer> spec_map;
+Integer res;
+
+if (map.containsKey(attr_name)) {
+spec_map = map.get(attr_name);
+
+if (spec_map.containsKey(id)) {
+return spec_map.get(id);
+
+} else {
+res = (Integer)spec_map.getLast() +1 ;
+spec_map.put(id, res );
+map.put(attr_name, spec_map);
+return res;
+}
+} else {
+//compute offset
+offset = os * map.size();
+spec_map = new HashMapWL<String, Integer>();
+
+res = 1 + start_from + offset;
+spec_map.put(id, res);
+map.put(attr_name, spec_map);
+return res;
+}
+}*/
