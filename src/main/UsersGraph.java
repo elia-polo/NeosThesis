@@ -4,14 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 
 import metrics.Stats;
 import utils.Util;
 
-import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
@@ -114,196 +111,196 @@ public class UsersGraph {
 		}
 	}
 	
-	public void fillMissingValue(Vertex v) {
-		 
-		/* friends list */
-		Iterable<Vertex> f_list = v.getVertices(Direction.BOTH, UserUtility.FRIEND);
-		
-		/* friends number */
-		int f_num=0; 
-		
-		/* the current property (age, location...)*/
-		String property;
-		
-		/******** gender variables ********/
-		int male = 0, female = 0;
-		
-		/******** age variable ********/
-		ArrayList<Integer> age_list = new ArrayList<Integer>();
-		
-		/******** location variable ********/
-		HashMap<String, Integer> loc_score = new HashMap<String, Integer>();
-
-		
-		/******** hometown variable ********/
-		HashMap<String, Integer> home_score = new HashMap<String, Integer>();
-
-		
-		/******** interested variable ********/
-		HashMap<String, Integer> interested_score = new HashMap<String, Integer>();
-
-		
-		/******** relationship variable ********/
-		HashMap<String, Integer> relationship_score = new HashMap<String, Integer>();
-
-		
-		
-		/******** education variable ********/
-		int hs_score = 0, c_score = 0, gs_score = 0;
-		String edu[];
-			
-		
-		for (Vertex friend : f_list) {
-			f_num ++;
-			/**** gender ****/
-			property = friend.getProperty(UserUtility.GENDER);
-						
-			if (property.equals("male"))
-				male++;
-			else if (property.equals("female"))
-				female++;
-			//else (if gender == "null") do nothing
-			
-			
-			/**** age ****/
-			property = friend.getProperty(UserUtility.AGE).toString();
-			
-			if (property.equals("null") == false) {
-				age_list.add(Integer.parseInt(property));
-			}
-
-			/**** location ****/
-			property = friend.getProperty(UserUtility.LOCATION).toString();
-			if (property.equals("null") == false) 
-				Util.incValue(loc_score, property + "," + 
-						friend.getProperty(UserUtility.LOCATION_NAME).toString());
-			
-			/**** hometown ****/
-			property = friend.getProperty(UserUtility.HOMETOWN).toString();
-			if (property.equals("null") == false)
-				Util.incValue(home_score, property + "," +
-						friend.getProperty(UserUtility.HOMETOWN_NAME).toString());
-			
-			/**** interested ****/
-			property = friend.getProperty(UserUtility.INTERESTED_IN).toString();
-			if (property.equals("null") == false)
-				Util.incValue(interested_score, property);
-			
-			/**** relation_ship ****/
-			property = friend.getProperty(UserUtility.REL_STATUS).toString();
-			if (property.equals("null") == false) 
-				Util.incValue(relationship_score, property);
-			
-			/**** education ****/
-			property = friend.getProperty(UserUtility.EDUCATION).toString();
-			if ( property.equals("0,0,0") == false ) {
-				edu = Util.fromCSV(property);
-				if (edu[0].equals("1")) hs_score++;
-				if (edu[1].equals("1")) c_score++;
-				if (edu[2].equals("1")) gs_score++;
-			}
-
-		}//FOR
-		
-		/* education */
-		property = v.getProperty(UserUtility.EDUCATION);
-		if (property.equals("0,0,0") == false) {
-			edu = Util.fromCSV(property);
-			
-			String[] res = new String[3];
-			res[0] = "0"; res[1] = "0"; res[2] = "0";
-			
-			if (edu[2].equals("1")) {
-					res[0] = "1";
-					res[1] = "1";
-					res[2] = "1";
-			} else if(edu[1].equals("1")) { 
-					res[0] = "1";
-					res[1] = "1";
-			}
-			
-			if (res[0].equals("0")) 
-				res[0] =  (f_num - hs_score) > hs_score  ? "0" : "1";
-			
-			
-			if (res[1].equals("0")) 
-				res[1] =  (f_num - c_score) > c_score  ? "0" : "1";
-			
-						
-			if (res[1].equals("0")) 
-				res[1] =  (f_num - gs_score) > gs_score  ? "0" : "1";
-				
-			
-			v.setProperty(UserUtility.EDUCATION, Util.toCSV(res));
-		}
-		/* age */
-		property = v.getProperty(UserUtility.AGE).toString();
-		if (property.equals("null")) {
-			if (age_list.isEmpty() == false)
-				v.setProperty(UserUtility.AGE, Util.median(age_list).toString());
-			else
-				v.setProperty(UserUtility.AGE, "22");			
-		}
-		
-		property = v.getProperty(UserUtility.AGE).toString();
-
-		/* location */
-		property = v.getProperty(UserUtility.LOCATION).toString();
-		if (property.equals("null"))
-		{
-			if (loc_score.isEmpty()==false)
-			{
-				String[] loc = Util.fromCSV(Util.retMax(loc_score));				
-				v.setProperty(UserUtility.LOCATION, loc[0]);
-				v.setProperty(UserUtility.LOCATION_NAME, loc[1]+","+loc[2]);
-			}
-			else { 
-				v.setProperty(UserUtility.LOCATION, "108581069173026");
-				v.setProperty(UserUtility.LOCATION_NAME, "Milan,Italy");
-			}
-		}
-		
-		/* hometown */
-		property = v.getProperty(UserUtility.HOMETOWN).toString();
-		if (property.equals("null")) 
-		{
-			if (home_score.isEmpty()==false)
-			{
-				String[] home = Util.fromCSV(Util.retMax(home_score));
-				v.setProperty(UserUtility.HOMETOWN, home[0]);
-				v.setProperty(UserUtility.HOMETOWN_NAME, home[1]);
-			}
-			else { 
-				v.setProperty(UserUtility.HOMETOWN, "108581069173026");
-				v.setProperty(UserUtility.HOMETOWN_NAME, "Milan,Italy");
-			}
-		}
-		
-		/* interested */
-		property = v.getProperty(UserUtility.INTERESTED_IN).toString();
-		if (property.equals("null")) {
-			if (interested_score.isEmpty() == false)
-				v.setProperty(UserUtility.INTERESTED_IN, Util.retMax(interested_score));
-			else
-				v.setProperty(UserUtility.INTERESTED_IN, "male");
-		}
-		
-		/* relationship */
-		property = v.getProperty(UserUtility.REL_STATUS).toString();
-		if (property.equals("null")) {
-			if (relationship_score.isEmpty() == false) {
-				v.setProperty(UserUtility.REL_STATUS, Util.retMax(relationship_score));
-			}
-			else {
-				v.setProperty(UserUtility.REL_STATUS, "Single");
-			}
-		}
-		/* gender */
-		property = v.getProperty(UserUtility.GENDER).toString();
-		if (property.equals("null")) 		
-			v.setProperty(UserUtility.GENDER, male > female ? "male" : "female" );
-		
-	}
+//	public void fillMissingValue(Vertex v) {
+//		 
+//		/* friends list */
+//		Iterable<Vertex> f_list = v.getVertices(Direction.BOTH, UserUtility.FRIEND);
+//		
+//		/* friends number */
+//		int f_num=0; 
+//		
+//		/* the current property (age, location...)*/
+//		String property;
+//		
+//		/******** gender variables ********/
+//		int male = 0, female = 0;
+//		
+//		/******** age variable ********/
+//		ArrayList<Integer> age_list = new ArrayList<Integer>();
+//		
+//		/******** location variable ********/
+//		HashMap<String, Integer> loc_score = new HashMap<String, Integer>();
+//
+//		
+//		/******** hometown variable ********/
+//		HashMap<String, Integer> home_score = new HashMap<String, Integer>();
+//
+//		
+//		/******** interested variable ********/
+//		HashMap<String, Integer> interested_score = new HashMap<String, Integer>();
+//
+//		
+//		/******** relationship variable ********/
+//		HashMap<String, Integer> relationship_score = new HashMap<String, Integer>();
+//
+//		
+//		
+//		/******** education variable ********/
+//		int hs_score = 0, c_score = 0, gs_score = 0;
+//		String edu[];
+//			
+//		
+//		for (Vertex friend : f_list) {
+//			f_num ++;
+//			/**** gender ****/
+//			property = friend.getProperty(UserUtility.GENDER);
+//						
+//			if (property.equals("male"))
+//				male++;
+//			else if (property.equals("female"))
+//				female++;
+//			//else (if gender == "null") do nothing
+//			
+//			
+//			/**** age ****/
+//			property = friend.getProperty(UserUtility.AGE).toString();
+//			
+//			if (property.equals("null") == false) {
+//				age_list.add(Integer.parseInt(property));
+//			}
+//
+//			/**** location ****/
+//			property = friend.getProperty(UserUtility.LOCATION).toString();
+//			if (property.equals("null") == false) 
+//				Util.incValue(loc_score, property + "," + 
+//						friend.getProperty(UserUtility.LOCATION_NAME).toString());
+//			
+//			/**** hometown ****/
+//			property = friend.getProperty(UserUtility.HOMETOWN).toString();
+//			if (property.equals("null") == false)
+//				Util.incValue(home_score, property + "," +
+//						friend.getProperty(UserUtility.HOMETOWN_NAME).toString());
+//			
+//			/**** interested ****/
+//			property = friend.getProperty(UserUtility.INTERESTED_IN).toString();
+//			if (property.equals("null") == false)
+//				Util.incValue(interested_score, property);
+//			
+//			/**** relation_ship ****/
+//			property = friend.getProperty(UserUtility.REL_STATUS).toString();
+//			if (property.equals("null") == false) 
+//				Util.incValue(relationship_score, property);
+//			
+//			/**** education ****/
+//			property = friend.getProperty(UserUtility.EDUCATION).toString();
+//			if ( property.equals("0,0,0") == false ) {
+//				edu = Util.fromCSV(property);
+//				if (edu[0].equals("1")) hs_score++;
+//				if (edu[1].equals("1")) c_score++;
+//				if (edu[2].equals("1")) gs_score++;
+//			}
+//
+//		}//FOR
+//		
+//		/* education */
+//		property = v.getProperty(UserUtility.EDUCATION);
+//		if (property.equals("0,0,0") == false) {
+//			edu = Util.fromCSV(property);
+//			
+//			String[] res = new String[3];
+//			res[0] = "0"; res[1] = "0"; res[2] = "0";
+//			
+//			if (edu[2].equals("1")) {
+//					res[0] = "1";
+//					res[1] = "1";
+//					res[2] = "1";
+//			} else if(edu[1].equals("1")) { 
+//					res[0] = "1";
+//					res[1] = "1";
+//			}
+//			
+//			if (res[0].equals("0")) 
+//				res[0] =  (f_num - hs_score) > hs_score  ? "0" : "1";
+//			
+//			
+//			if (res[1].equals("0")) 
+//				res[1] =  (f_num - c_score) > c_score  ? "0" : "1";
+//			
+//						
+//			if (res[1].equals("0")) 
+//				res[1] =  (f_num - gs_score) > gs_score  ? "0" : "1";
+//				
+//			
+//			v.setProperty(UserUtility.EDUCATION, Util.toCSV(res));
+//		}
+//		/* age */
+//		property = v.getProperty(UserUtility.AGE).toString();
+//		if (property.equals("null")) {
+//			if (age_list.isEmpty() == false)
+//				v.setProperty(UserUtility.AGE, Util.median(age_list).toString());
+//			else
+//				v.setProperty(UserUtility.AGE, "22");			
+//		}
+//		
+//		property = v.getProperty(UserUtility.AGE).toString();
+//
+//		/* location */
+//		property = v.getProperty(UserUtility.LOCATION).toString();
+//		if (property.equals("null"))
+//		{
+//			if (loc_score.isEmpty()==false)
+//			{
+//				String[] loc = Util.fromCSV(Util.retMax(loc_score));				
+//				v.setProperty(UserUtility.LOCATION, loc[0]);
+//				v.setProperty(UserUtility.LOCATION_NAME, loc[1]+","+loc[2]);
+//			}
+//			else { 
+//				v.setProperty(UserUtility.LOCATION, "108581069173026");
+//				v.setProperty(UserUtility.LOCATION_NAME, "Milan,Italy");
+//			}
+//		}
+//		
+//		/* hometown */
+//		property = v.getProperty(UserUtility.HOMETOWN).toString();
+//		if (property.equals("null")) 
+//		{
+//			if (home_score.isEmpty()==false)
+//			{
+//				String[] home = Util.fromCSV(Util.retMax(home_score));
+//				v.setProperty(UserUtility.HOMETOWN, home[0]);
+//				v.setProperty(UserUtility.HOMETOWN_NAME, home[1]);
+//			}
+//			else { 
+//				v.setProperty(UserUtility.HOMETOWN, "108581069173026");
+//				v.setProperty(UserUtility.HOMETOWN_NAME, "Milan,Italy");
+//			}
+//		}
+//		
+//		/* interested */
+//		property = v.getProperty(UserUtility.INTERESTED_IN).toString();
+//		if (property.equals("null")) {
+//			if (interested_score.isEmpty() == false)
+//				v.setProperty(UserUtility.INTERESTED_IN, Util.retMax(interested_score));
+//			else
+//				v.setProperty(UserUtility.INTERESTED_IN, "male");
+//		}
+//		
+//		/* relationship */
+//		property = v.getProperty(UserUtility.REL_STATUS).toString();
+//		if (property.equals("null")) {
+//			if (relationship_score.isEmpty() == false) {
+//				v.setProperty(UserUtility.REL_STATUS, Util.retMax(relationship_score));
+//			}
+//			else {
+//				v.setProperty(UserUtility.REL_STATUS, "Single");
+//			}
+//		}
+//		/* gender */
+//		property = v.getProperty(UserUtility.GENDER).toString();
+//		if (property.equals("null")) 		
+//			v.setProperty(UserUtility.GENDER, male > female ? "male" : "female" );
+//		
+//	}
 
 	/**
 	 * <p>Add an EUser (see UserUtility.java) to the usersGraph</p>
@@ -387,16 +384,33 @@ public class UsersGraph {
 		
 		if(user.getEdu()!= null) {
 			String[] vec = user.getEduVec();
-			if(setProperty(v_user,UserUtility.EDUCATION, Util.toXSV(vec, ","))) {
-				statistics.incrementEducation();
-				if(vec[0].equals("1"))
-					statistics.incrementHighSchool();
-				if(vec[1].equals("1"))
-					statistics.incrementCollege();
-				if(vec[2].equals("1"))
-					statistics.incrementGraduateSchool();
+			
+			if (vec[2].equals("1")) {
+				vec[0] = "1";
+				vec[1] = "1";
+			} else if (vec[1].equals("1")) {
+				vec[0] = "1";
 			}
-		} else setProperty(v_user, UserUtility.EDUCATION, "null");
+				
+			if(vec[0].equals("1")) {
+				statistics.incrementHighSchool();
+				setProperty(v_user, UserUtility.HIGH_SCHOOL, "1");
+			} else setProperty(v_user, UserUtility.HIGH_SCHOOL, "null");
+			
+			if(vec[1].equals("1")) {
+				statistics.incrementCollege();
+				setProperty(v_user, UserUtility.COLLEGE, "1");
+			} else setProperty(v_user, UserUtility.COLLEGE, "null");
+			
+			if(vec[2].equals("1")) {
+				statistics.incrementGraduateSchool();
+				setProperty(v_user, UserUtility.GRADUATE_SCHOOL, "1");
+			} else setProperty(v_user, UserUtility.GRADUATE_SCHOOL, "null");			
+		} else {
+			setProperty(v_user, UserUtility.HIGH_SCHOOL, "null");
+			setProperty(v_user, UserUtility.GRADUATE_SCHOOL, "null");
+			setProperty(v_user, UserUtility.COLLEGE, "null");
+		}
 		
 		/* friends list */
 		if (user.getFriends()!=null) {
