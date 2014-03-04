@@ -63,15 +63,7 @@ public class DBCSCConverter implements Converter {
 		
 		pw.write(init);
 	}
-	
-	private boolean contains(Iterable<Vertex> c, Vertex v) {
-		for (Vertex e : c) {
-			if (e.getId().toString().equals(v.getId().toString()))
-				return true;
-		}
-		return false;
-	}
-	
+		
 	private String genGraphMLAttr(Object[] profile) {
 		StringBuilder str = new StringBuilder(); 
 		Integer i = new Integer(0);
@@ -154,7 +146,7 @@ public class DBCSCConverter implements Converter {
 					profile[RS_WIDOWED] = "1";
 					break;
 				}
-			} //else all profile education-element are setted to 0 
+			} //else all profile relationship_status-element are setted to 0 
 
 			/*** INTERESTED IN****/
 			switch(u.getProperty(UserUtility.INTERESTED_IN).toString()) {
@@ -185,21 +177,34 @@ public class DBCSCConverter implements Converter {
 			}
 			
 			/***EDUCATION****/
-			String[] vec = Util.fromXSV(u.getProperty(UserUtility.EDUCATION).toString(), ",");
-			profile[E_HIGH_SCHOOL] = vec[0];
-			profile[E_COLLEGE] = vec[1];
-			profile[E_GRADUATE_SCHOOL] = vec[2];
+			s = u.getProperty(UserUtility.HIGH_SCHOOL).toString();
+			if (s.equals("1"))
+				profile[E_HIGH_SCHOOL] = 1;
+			else
+				profile[E_HIGH_SCHOOL] = 0;
 			
+			s = u.getProperty(UserUtility.COLLEGE).toString();
+			if (s.equals("1"))
+				profile[E_COLLEGE] = 1;
+			else
+				profile[E_COLLEGE] = 0;
+
+			s = u.getProperty(UserUtility.GRADUATE_SCHOOL).toString();
+			if (s.equals("1"))
+				profile[E_GRADUATE_SCHOOL] = 1;
+			else
+				profile[E_GRADUATE_SCHOOL] = 0;
+
 			
 			attribute.append(genGraphMLAttr(profile));
 			
 			/* get the _user_ like (here Direction.OUT is enough) */
 			user_likes = u.getVertices(Direction.BOTH, "likes");
 			
-			/* for each user like */
+			/* for each graph like */
 			for (Vertex l : likes) {
 				attribute.append("like_" + l.getId().toString()+"=\"");
-				attribute.append(contains(user_likes,l) ? 1 : 0) ;
+				attribute.append(ConvUtility.contains(user_likes,l) ? 1 : 0) ;
 				attribute.append("\" ");
 				working_str.append(attribute);
 				attribute.setLength(0);
