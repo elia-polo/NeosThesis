@@ -150,6 +150,7 @@ public class UserPuker {
 				EEducation edu = new EEducation();
 				/* set edu 'type' fields */
 				edu.setType(single_edu.asObject().get_str_value(UserUtility.TYPE));
+				//System.out.println(o.get_str_value("id")  + "******************" + edu.getType().toString());
 				/* if exists 'school' fields... */
 				try {
 					edu.setName_id(new CoupleNameId(single_edu.asObject()

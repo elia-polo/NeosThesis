@@ -60,7 +60,7 @@ public class INCClusterConverter implements Converter {
 			
 			AttributesStats as = new AttributesStats();
 			
-			as.getStats(graph);
+			as.getStatsAndCard(graph);
 			
 			// get the attributes-value map (gender={male=32,female=12},age={young=...})
 			HashMap<String, HashMap<?,?>> attrs_value_map = as.getListAttrsStats();
@@ -133,7 +133,8 @@ public class INCClusterConverter implements Converter {
 							                            trans_prob_user));
 				}
 				
-				// ********* second bunch of writes *********
+				// ********* first bunch of writes *********
+				
 				// write into dataset.txt file and empty the line_user 
 				bw_dataset.write(line_user.toString(), 0, line_user.length());
 				line_user.setLength(0);
@@ -143,7 +144,20 @@ public class INCClusterConverter implements Converter {
 				// !!! devo metterlo per forza oppure puo' non esserci quell'attributo?				
 				
 				// attribute format: attribute_name=attribute_value
+				
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 				attrs_value.add(UserUtility.AGE+"=" + u.getProperty(UserUtility.AGE).toString());
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+				//DISCRETIZZARE ETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 				 
 				attrs_value.add(UserUtility.GENDER+"="  + u.getProperty(UserUtility.GENDER).toString());
 				attrs_value.add(UserUtility.INTERESTED_IN+"=" + u.getProperty(UserUtility.INTERESTED_IN).toString());
@@ -161,25 +175,31 @@ public class INCClusterConverter implements Converter {
 				
 				trans_prob_attr = new Float(magic_constant / (attrs_value.size() + g.statistics.getLikeCount()) ).toString();
 				
+
 				for (String attr : attrs_value) {
 					
-					res = ConvUtility.getIncIdHMS(attr_inc_id_map, attr, users_number, attrs_occ, null);
-					
-					a_inc_id = res.toString();
-					
-					line_user.append(ConvUtility.format(SEPARATOR, u_inc_id, 
-							                            a_inc_id,
-							                            trans_prob_attr)); 
-
-					// set line_attr for the attributes table file
-					line_attr.append(ConvUtility.format(SEPARATOR, u_inc_id, new Integer(i++).toString(), attr));
-					
-					// get the occurrence of the couple <attribute name, attribute value>
-					// attribute name => attr.split("=")[0], attribute value => attr.split("=")[1]
-					occ = new Float(attrs_value_map.get(attr.split("=")[0]).get(attr.split("=")[1]).toString());
-					
-					line_attr_user.append(ConvUtility.format(SEPARATOR, a_inc_id, u_inc_id, 
-							                                 new Float(1 / occ).toString()));
+					if ( attr.split("=")[1].equals("null") == false ) {
+						
+						res = ConvUtility.getIncIdHMS(attr_inc_id_map, attr, users_number, attrs_occ, null);
+						
+						a_inc_id = res.toString();
+						
+						// edge user-attr
+						line_user.append(ConvUtility.format(SEPARATOR, u_inc_id, 
+								                            a_inc_id,
+								                            trans_prob_attr)); 
+	
+						// set line_attr for the attributes table file 
+						line_attr.append(ConvUtility.format(SEPARATOR, u_inc_id, new Integer(i++).toString(), attr));
+						
+						// get the occurrence of the couple <attribute name, attribute value>
+						// attribute name => attr.split("=")[0], attribute value => attr.split("=")[1]
+						occ = new Float(attrs_value_map.get(attr.split("=")[0]).get(attr.split("=")[1]).toString());
+						
+						// edge attr-user 
+						line_attr_user.append(ConvUtility.format(SEPARATOR, a_inc_id, u_inc_id, 
+								                                 new Float(1 / occ).toString()));
+					} else i++;
 				}
 				
 				// ********* second bunch of writes *********
@@ -207,13 +227,17 @@ public class INCClusterConverter implements Converter {
 					res = ConvUtility.getIncIdHMS(likes_inc_id_map, like_value, l_start_from, null, 2);
 					l_inc_id = res.toString();
 					
+					// edge user-like
 					line_user.append(ConvUtility.format(SEPARATOR, u_inc_id, 
 							                                       l_inc_id,
 							                                       trans_prob_attr));
 					
+					//couple user-like in the attribute file
 					line_attr.append(ConvUtility.format(SEPARATOR, u_inc_id, new Integer(i++).toString(), like_value));
 					
-					occ = new Float(isin ? like_degree : (users_number - like_degree));  
+					occ = new Float(isin ? like_degree : (users_number - like_degree));
+					
+					//edge like-user
 					line_attr_user.append(ConvUtility.format(SEPARATOR, l_inc_id, u_inc_id,
 															 new Float(1 / occ).toString()));
 				}
@@ -235,8 +259,6 @@ public class INCClusterConverter implements Converter {
 			//!!!the only effect is to have the edges attr---user not at the end of file
 			//!!!here only for debug purposes
 			bw_dataset.write(line_attr_user.toString(), 0, line_attr_user.length());
-
-				
 		} catch(IOException e) {
 			e.printStackTrace();
 		}

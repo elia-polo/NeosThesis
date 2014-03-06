@@ -102,8 +102,8 @@ public class EUser {
 	 */
 	public String[] getEduVec() {
 		String[] tmp = {"0","0","0"};
-		for(EEducation e: edu) {
-			if(e.getType() != null) {
+		for(EEducation e : edu) {
+			if (e.getType() != null) {
 				switch(e.getType()) {
 				case UserUtility.HIGH_SCHOOL:
 					tmp[0] = "1";

@@ -1,6 +1,10 @@
 package converters;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import main.UserUtility;
+import utils.Util;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
@@ -9,7 +13,7 @@ import com.tinkerpop.blueprints.Vertex;
 
 /**
  * HashMapWL (With Last) extends HashMap to achieve
- * the goal of having the last inserted element in the hashmap
+ * the goal of storing the last inserted element.
  * 
  * NB: the last stored element is intended to be the __value__
  * of the last entry
@@ -61,7 +65,7 @@ public class ConvUtility {
 	 * Gets the incremental user id.
 	 * If the 'id' has never been inserted into the hashmap then
 	 * it is added to the hashmap with an incremental value (i.e
-	 * the last incremental id + 1, starting from 'start_from').
+	 * the last incremental id + 1, starting from 'start_after').
 	 * If the  'id' has already been inserted into the hashmap
 	 * the matching incremental id is returned. 
 	 * 
@@ -71,11 +75,11 @@ public class ConvUtility {
 	 * 
 	 * */
 	
-	public static Integer getIncId(HashMap<String, Integer> map, String id, int start_from) {
+	public static Integer getIncId(HashMap<String, Integer> map, String id, int start_after) {
 		if (map.containsKey(id)) 
 			return map.get(id);
 		 else {
-			Integer res = new Integer(map.size() + 1 + start_from);
+			Integer res = new Integer(map.size() + 1 + start_after);
 			map.put(id, res);
 			return res;
 		 }
@@ -121,9 +125,9 @@ public class ConvUtility {
 	 * }
 	 * and returs an Integer object equal to 4.
 	 * 
-	 * Note1: The method uses also a start_from int parameter, in these case all the ids is
-	 *        start_from-shifted (i.e. the first couple of the first attribute name begins  
-	 *        from 'start_from' and not from '1')
+	 * Note1: The method uses also a 'start_after' int parameter, in these case all the ids is
+	 *        start_after-shifted (i.e. the first couple of the first attribute name begins  
+	 *        from 'start_after + 1' and not from '1')
 	 * 
 	 * Note2: The method uses an Integer 'os' (OffSet) (mut. excl. to attrs_cardinality): in this way
 	 *        it is likely to have a attrs_cardinality map with a fixed cardinality for each attributes. 
@@ -134,22 +138,25 @@ public class ConvUtility {
 	 *     
 	 * @param map
 	 * @param couple
-	 * @param start_from
+	 * @param start_after
 	 * @param attrs_cardinality
 	 * @param os
 	 * 
 	 * @return the incremental __inner__ id for couple name=value 
-	 *          
+	 * @throws IllegalArgumentException in two case: 1. if 'attrs_cardinality' and 'os' equal to null.
+	 *         2. if attrs_cardinality doesn't contain a key specified in map HashMap 
+	 *         
 	 * 
 	 * */
 	public static Integer getIncIdHMS(HashMap<String, HashMapWL<String, Integer>> map, 
 										   String couple, 
-										   int start_from, 
+										   int start_after, 
 										   HashMap<String, Integer>attrs_cardinality, Integer os) 
+												   throws IllegalArgumentException
 	{
 		if (attrs_cardinality == null && os == null) 
-				throw new IllegalArgumentException("'attr_offset and' and 'os' parameters" +
-		                                            "cannot be simultaneously null.");
+				throw new IllegalArgumentException("'attr_offset and' and 'os' parameters " +
+		                                            "cannot be simultaneously equal to null.");
 		String attr_name = couple.split("=")[0];
 		
 		HashMapWL<String, Integer> spec_map;
@@ -185,7 +192,7 @@ public class ConvUtility {
 			
 			spec_map = new HashMapWL<String, Integer>();
 		
-			res = 1 + start_from + offset;
+			res = 1 + start_after + offset;
 			spec_map.put(couple, res);
 			map.put(attr_name, spec_map);
 			return res;
@@ -194,7 +201,7 @@ public class ConvUtility {
 		
 	/**
 	 * given the set of string arguments the method returns 
-	 * a String separated with the 'sep' Character and
+	 * a String separated with the 'sep' character and
 	 * ended with a newline
 	 * 
 	 *  @param sep, the strings separator
@@ -213,12 +220,41 @@ public class ConvUtility {
 	
 		return res.toString();
 	}
+	
+	/**
+	 * */
+	public static ArrayList<String> fillAttributeList(Vertex u) {
+		ArrayList<String>attrs_value = new ArrayList<String>();
+		
+		String a;
+		if ( (a = u.getProperty(UserUtility.AGE).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.AGE+"=" + Util.discretizeAge(new Integer(a)));
+		if ( (a = u.getProperty(UserUtility.GENDER).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.GENDER+"=" + a);
+		if ( (a = u.getProperty(UserUtility.INTERESTED_IN).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.INTERESTED_IN+"=" + a);
+		if ( (a = u.getProperty(UserUtility.HOMETOWN).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.HOMETOWN+"=" + a);
+		if ( (a = u.getProperty(UserUtility.LOCATION).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.LOCATION+"=" + a);
+		if ( (a = u.getProperty(UserUtility.REL_STATUS).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.REL_STATUS+"=" + a);
+		if ( (a = u.getProperty(UserUtility.HIGH_SCHOOL).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.HIGH_SCHOOL+"=" + a);
+		if ( (a = u.getProperty(UserUtility.COLLEGE).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.COLLEGE+"=" + a);
+		if ( (a = u.getProperty(UserUtility.GRADUATE_SCHOOL).toString()).equals("null") == false )
+			attrs_value.add(UserUtility.GRADUATE_SCHOOL+"=" + a);
+		
+		return attrs_value;
+
+	}
 }
 
 
 /*	public static Integer getIncIdHMS(HashMap<String, HashMapWL<String, Integer>> map, 
 String id, 
-int start_from,
+int start_after,
 int os)
 {
 int offset = 0 ;
@@ -245,7 +281,7 @@ return res;
 offset = os * map.size();
 spec_map = new HashMapWL<String, Integer>();
 
-res = 1 + start_from + offset;
+res = 1 + start_after + offset;
 spec_map.put(id, res);
 map.put(attr_name, spec_map);
 return res;

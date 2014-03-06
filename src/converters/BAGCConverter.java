@@ -29,7 +29,7 @@ public class BAGCConverter  implements Converter {
 		
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the BAGC clustering algorithm.
-	 * The first expected input is a COO file, where each row is a triple (user id, user id, value).
+	 * The first expected input is a COO file, where each row is a 3-tuple (user id, user id, value).
 	 * The couple of users id represents the (friend) relationship of users.  The user id is an 
 	 * incremental value which indentify uniquely a Facebook user.
 	 * The second input file is a txt table in which each row number 'i' represents an attributes 
@@ -104,7 +104,7 @@ public class BAGCConverter  implements Converter {
 				/* likes binary vector */
 				String likes_vec = new String();
 				
-				/* for each user like */
+				/* for each graph likes */
 				for (Vertex l : likes) {
 					likes_vec += ConvUtility.contains(user_likes,l) ? "1" : "0";
 					likes_vec += SEPARATOR;

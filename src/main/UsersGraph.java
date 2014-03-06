@@ -494,9 +494,9 @@ public class UsersGraph {
 		EUser u;
 		UserPuker j;
 		for (File f : files) {
-			System.out.println("ciao");
 			j = new  UserPuker(f.getAbsolutePath());
 			u = j.getEUser();
+			System.out.println(u.getId().toString());
 			g.addUser(u);
 			
 			if (u.getFriends()!=null)
