@@ -29,16 +29,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import utils.Util;
-
-import com.tinkerpop.blueprints.Direction;
-import com.tinkerpop.blueprints.Graph;
-import com.tinkerpop.blueprints.Vertex;
-
 import main.UserPuker;
 import main.UserUtility;
 import main.UsersGraph;
 import metrics.AttributesStats;
+
+import com.tinkerpop.blueprints.Direction;
+import com.tinkerpop.blueprints.Graph;
+import com.tinkerpop.blueprints.Vertex;
 
 
 public class INCClusterConverter implements Converter {
