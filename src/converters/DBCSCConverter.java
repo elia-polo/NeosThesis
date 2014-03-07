@@ -48,8 +48,6 @@ public class DBCSCConverter implements Converter {
 
 	private static final int PROFILE_ATTRIBUTES = 21;
 	
-
-	
 	public DBCSCConverter(String filename) throws FileNotFoundException {
 		
 		pw = new PrintWriter(filename);
@@ -226,7 +224,7 @@ public class DBCSCConverter implements Converter {
 	}
 	
 	public static void main(String args[]) throws FileNotFoundException, IOException {
-		File inputFolder = new File("/home/np2k/Desktop/test_missing");
+		File inputFolder = new File("/home/np2k/Desktop/json.debug");
 		File[] files = inputFolder.listFiles();
 		
 		UsersGraph g = new UsersGraph();

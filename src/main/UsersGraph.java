@@ -54,7 +54,9 @@ import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 public class UsersGraph {
 
-	private static final boolean debug = false; 
+	private static final boolean debug = true;
+	
+	private static final String json_dir = "/home/np2k/Desktop/json.debug/";
 	
 	private Graph graph;                 /* the whole users graph */
 
@@ -412,35 +414,38 @@ public class UsersGraph {
 			setProperty(v_user, UserUtility.COLLEGE, "null");
 		}
 		
+		
 		/* friends list */
 		if (user.getFriends()!=null) {
 			statistics.incrementFriends();
 			Vertex v_friend;
 			String edge_id;
 			for (String f_id : user.getFriends()) {
-				try {
-					v_friend = graph.addVertex(f_id);
-					if(debug) {
-						v_friend.setProperty(UserUtility.WHOAMI, "user");
+//				if ( (new File(json_dir+f_id+".json")).exists() == true ||
+//					 (new File(json_dir+f_id+"-DAU.json")).exists() == true ) {						
+					try {
+						v_friend = graph.addVertex(f_id);
+						if(debug) {
+							v_friend.setProperty(UserUtility.WHOAMI, "user");
+						}
+						users_number++;
+						statistics.incrementNodeCount();
+					} catch (IllegalArgumentException e) { 
+						v_friend = graph.getVertex(f_id);
+						shared_friends++;
 					}
-					users_number++;
-					statistics.incrementNodeCount();
-				} catch (IllegalArgumentException e) { 
-					v_friend = graph.getVertex(f_id);
-					shared_friends++;
-				}
+						
+					/* create an unique id for the edge between a user and its friend */
+					if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0) 
+						edge_id = v_user.getId().toString()+ "-" + v_friend.getId().toString();
+					else
+						edge_id = v_friend.getId().toString() + "-" + v_user.getId().toString() ;
 					
-				/* create an unique id for the edge between a user and its friend */
-				if (v_user.getId().toString().compareTo(v_friend.getId().toString()) > 0) 
-					edge_id = v_user.getId().toString()+ "-" + v_friend.getId().toString();
-				else
-					edge_id = v_friend.getId().toString() + "-" + v_user.getId().toString() ;
-				
-				try {
-					graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
-					statistics.incrementEdgeCount();
-				} catch (IllegalArgumentException e) { /* do nothing */ }
-
+					try {
+						graph.addEdge(edge_id, v_user, v_friend, UserUtility.FRIEND);
+						statistics.incrementEdgeCount();
+					} catch (IllegalArgumentException e) { /* do nothing */ }
+//				} else System.out.println(f_id + " file not found!!!");
 			}
 		}
 			
@@ -482,8 +487,26 @@ public class UsersGraph {
 		return graph;
 	}
 	
+	public void cleanGraphRetainingOnlyFriendsWithJsonFile() {
+
+		Iterable<Vertex> users =                    
+				graph.getVertices(UserUtility.WHOAMI, "user");
+		
+		for (Vertex u : users) {
+			if ( (new File (json_dir+u.getId().toString()+".json").exists() == false) &&
+			     (new File (json_dir+u.getId().toString()+"-DAU.json").exists() == false) ) {
+				graph.removeVertex(u);
+				System.out.println(u.getId().toString() + " vertex removed!");
+			}	
+		}
+
+	}
+	
+
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		
+		long start_time = System.currentTimeMillis();
+
 		File inputFolder = new File("/home/np2k/Desktop/json.debug");
 		File[] files = inputFolder.listFiles();
 		
@@ -509,6 +532,11 @@ public class UsersGraph {
 			//System.out.println(files.length-i);
 			//i++;
 		}
+		
+		System.out.println("\n\n");
+		g.cleanGraphRetainingOnlyFriendsWithJsonFile();
+		System.out.println("elaps. time: "+(System.currentTimeMillis() - start_time)+" (ms)");
+
 		File output_net = new File("/home/np2k/Desktop", "net.debug.gml");
 		
 		BufferedOutputStream bos;
@@ -591,7 +619,6 @@ public class UsersGraph {
 //		GMLWriter.outputGraph(graph,bos);
 //		System.out.println("see newgraph.gml");
 	}
-	
 	public float getMissingValueRatio(String field) {
 		switch(field) {
 		case UserUtility.GENDER:
