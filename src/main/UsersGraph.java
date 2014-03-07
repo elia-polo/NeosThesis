@@ -492,13 +492,17 @@ public class UsersGraph {
 		Iterable<Vertex> users =                    
 				graph.getVertices(UserUtility.WHOAMI, "user");
 		
+		int howmany = 0;
+		
 		for (Vertex u : users) {
 			if ( (new File (json_dir+u.getId().toString()+".json").exists() == false) &&
 			     (new File (json_dir+u.getId().toString()+"-DAU.json").exists() == false) ) {
 				graph.removeVertex(u);
 				System.out.println(u.getId().toString() + " vertex removed!");
+				++howmany ;
 			}	
 		}
+		System.out.println("total removed vertices: " + howmany);
 
 	}
 	
