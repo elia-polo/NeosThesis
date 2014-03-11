@@ -229,20 +229,28 @@ public class ConvUtility {
 		String a;
 		if ( (a = u.getProperty(UserUtility.AGE).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.AGE+"=" + Util.discretizeAge(new Integer(a)));
+		
 		if ( (a = u.getProperty(UserUtility.GENDER).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.GENDER+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.INTERESTED_IN).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.INTERESTED_IN+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.HOMETOWN).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.HOMETOWN+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.LOCATION).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.LOCATION+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.REL_STATUS).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.REL_STATUS+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.HIGH_SCHOOL).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.HIGH_SCHOOL+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.COLLEGE).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.COLLEGE+"=" + a);
+		
 		if ( (a = u.getProperty(UserUtility.GRADUATE_SCHOOL).toString()).equals("null") == false )
 			attrs_value.add(UserUtility.GRADUATE_SCHOOL+"=" + a);
 		

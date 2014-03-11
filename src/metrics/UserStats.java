@@ -219,7 +219,7 @@ public class UserStats {
 	public static Graph loadFromJson() {
 		// Build graph from Json files
 		Graph graph = new TinkerGraph();
-		File[] files = new File("C:/Programming/Git/json_users").listFiles();
+		File[] files = new File("/home/np2k/Desktop/repository").listFiles();
 //		 File[] files = new File("./assets/json.debug").listFiles();
 		for (File f : files) {
 			try (BufferedReader json = Files.newBufferedReader(f.toPath(),StandardCharsets.UTF_8)) {

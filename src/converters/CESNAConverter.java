@@ -144,7 +144,7 @@ public class CESNAConverter implements Converter {
 		UserPuker j;
 		
 		for (File f : files) {
-			j = new  UserPuker(f.getAbsolutePath());
+			j = new UserPuker(f.getAbsolutePath());
 			System.out.println(f.getAbsolutePath());
 			System.out.println(j.getEUser().getId().toString());
 			g.addUser(j.getEUser());			
