@@ -76,15 +76,17 @@ public class GraphConnectivity {
 	        return count;
 	    }
 
-	    public String toString() {
+	    public String summary(boolean details) {
 	    	StringBuilder sb = new StringBuilder();
 	    	sb.append("Connected components:").append(System.lineSeparator()).append("Component\t\tSize").append(System.lineSeparator());
 	    	for(int i=0; i<size.size(); ++i) {
 	    		sb.append("Component ").append(i).append("\t\t").append(size.get(i)).append(System.lineSeparator());
 	    	}
-	    	sb.append(System.lineSeparator()).append("Vertex\tComponent").append(System.lineSeparator());
-	    	for(Map.Entry<Vertex,Integer> c : components.entrySet()) {
-	    		sb.append(c.getKey().getId().toString()).append("\t\t").append(c.getValue()).append(System.lineSeparator());
+	    	if(details) {
+		    	sb.append(System.lineSeparator()).append("Vertex\tComponent").append(System.lineSeparator());
+		    	for(Map.Entry<Vertex,Integer> c : components.entrySet()) {
+		    		sb.append(c.getKey().getId().toString()).append("\t\t").append(c.getValue()).append(System.lineSeparator());
+		    	}
 	    	}
 	    	return sb.toString();
 	    }
