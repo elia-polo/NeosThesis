@@ -1,8 +1,10 @@
 package metrics;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -26,7 +28,7 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
-import com.tinkerpop.blueprints.util.io.gml.GMLReader;
+import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 
 public class UserStats {
 	/**
@@ -42,6 +44,7 @@ public class UserStats {
 	
 	private static final boolean debug = false;
 	private static final String null_key = "null";
+	private static final String valid_user = "VALID";
 	
 	/**
 	 * Compute the map of &lt;attribute value, attribute count&gt; pairs for the neighbours of the given node
@@ -216,19 +219,15 @@ public class UserStats {
 	public static Graph loadFromJson() {
 		// Build graph from Json files
 		Graph graph = new TinkerGraph();
-		String json_dir = "/home/np2k/Desktop/repository/";
-//		File[] files = new File("C:/Programming/Git/json_users").listFiles();
-		File[] files = new File(json_dir).listFiles();
+		File[] files = new File("/home/np2k/Desktop/repository").listFiles();
+//		 File[] files = new File("./assets/json.debug").listFiles();
 		for (File f : files) {
 			try (BufferedReader json = Files.newBufferedReader(f.toPath(),StandardCharsets.UTF_8)) {
-				//System.out.println("***" + f.getAbsolutePath());
 				JsonObject jsonObj = JsonObject.readFrom(json);
 				String s;
 				s = jsonObj.get(UserUtility.ID).asString();
 				if (debug) {
-					if (debug) {
-						System.out.println(UserUtility.ID + " " + s);
-					}
+					System.out.println(UserUtility.ID + " " + s);
 				}
 				Vertex user;
 				try {
@@ -236,6 +235,7 @@ public class UserStats {
 				} catch (IllegalArgumentException e) {
 					user = graph.getVertex(s);
 				}
+				user.setProperty(valid_user, true); // Only users associated to a file are kept
 				user.setProperty(UserUtility.ISDAU, f.getName().contains("DAU"));
 				s = asString(jsonObj.get(UserUtility.GENDER));
 				if (debug) {
@@ -297,29 +297,21 @@ public class UserStats {
 				ArrayList<String> friends = UserPuker.parseFriends(jsonObj,(Boolean) user.getProperty(UserUtility.ISDAU));
 				if (friends != null) {
 					for (String fr : friends) {
-						
-						if ( (new File (json_dir+fr+".json").exists() == true) ||
-						     (new File (json_dir+fr+"-DAU.json").exists() == true) ) {
+						Vertex friend;
+						try {
+							friend = graph.addVertex(fr);
+						} catch (IllegalArgumentException e) {
+							friend = graph.getVertex(fr);
+						}
+						String edge_id;
+						if (user.getId().toString().compareTo(friend.getId().toString()) > 0)
+							edge_id = user.getId().toString() + "-" + friend.getId().toString();
+						else
+							edge_id = friend.getId().toString() + "-" + user.getId().toString();
 
-							Vertex friend;
-							try {
-								friend = graph.addVertex(fr);
-							} catch (IllegalArgumentException e) {
-								friend = graph.getVertex(fr);
-							}
-							
-							String edge_id;
-							if (user.getId().toString().compareTo(friend.getId().toString()) > 0)
-								edge_id = user.getId().toString() + "-" + friend.getId().toString();
-							else
-								edge_id = friend.getId().toString() + "-" + user.getId().toString();
-	
-							try {
-								graph.addEdge(edge_id, user, friend,UserUtility.FRIEND);
-							} catch (IllegalArgumentException e) { /* do nothing */ }
-						} else {						
-							if (debug)
-								System.out.println(fr + " doesn't have a corresponding json file. not inserted into the graph");
+						try {
+							graph.addEdge(edge_id, user, friend,UserUtility.FRIEND);
+						} catch (IllegalArgumentException e) { /* do nothing */
 						}
 					}
 				}
@@ -327,25 +319,35 @@ public class UserStats {
 				System.err.println("IO Exception in main\n" + e.getMessage());
 			}
 		}
+		// Scan the graph looking for users without the VALID flag
+		int count = 0;
+		for(Vertex v : graph.getVertices()) {
+			if(v.getProperty(valid_user) == null) {
+				++count;
+				graph.removeVertex(v);
+			} else {
+				v.removeProperty(valid_user);
+			}
+		}
+		System.out.println("Removed "+count+" nodes. No property file was available");
 		return graph;
 	}
 	
 	public static void main(String[] args) {
-		Graph graph;
-//		graph = loadFromJson();
-		try {
-			graph = new TinkerGraph();
-			GMLReader.inputGraph(graph, "./graph_backup.gml");
-		} catch (IOException e1) {
-			e1.printStackTrace();
-			return;
-		}
-		// Save gml of the graph
-//		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("./graph.gml"))){
-//			GMLWriter.outputGraph(graph,bos);
-//		} catch (IOException e) {
-//			e.printStackTrace();
+		Graph graph = new TinkerGraph();
+		graph = loadFromJson();
+//		try {
+//			GMLReader.inputGraph(graph, "./graph_backup.gml");
+//		} catch (IOException e1) {
+//			e1.printStackTrace();
+//			return;
 //		}
+		// Save gml of the graph
+		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("./graph.gml"))){
+			GMLWriter.outputGraph(graph,bos);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		try (BufferedWriter stat_file = Files.newBufferedWriter(Paths.get("./stats.txt"), StandardCharsets.UTF_8);
 				BufferedWriter stat_summary = Files.newBufferedWriter(Paths.get("./stats_summary.txt"), StandardCharsets.UTF_8)) {
