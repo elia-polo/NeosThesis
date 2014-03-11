@@ -216,10 +216,12 @@ public class UserStats {
 	public static Graph loadFromJson() {
 		// Build graph from Json files
 		Graph graph = new TinkerGraph();
+		String json_dir = "/home/np2k/Desktop/repository/";
 //		File[] files = new File("C:/Programming/Git/json_users").listFiles();
-		 File[] files = new File("./assets/json.debug").listFiles();
+		File[] files = new File(json_dir).listFiles();
 		for (File f : files) {
 			try (BufferedReader json = Files.newBufferedReader(f.toPath(),StandardCharsets.UTF_8)) {
+				//System.out.println("***" + f.getAbsolutePath());
 				JsonObject jsonObj = JsonObject.readFrom(json);
 				String s;
 				s = jsonObj.get(UserUtility.ID).asString();
@@ -295,21 +297,29 @@ public class UserStats {
 				ArrayList<String> friends = UserPuker.parseFriends(jsonObj,(Boolean) user.getProperty(UserUtility.ISDAU));
 				if (friends != null) {
 					for (String fr : friends) {
-						Vertex friend;
-						try {
-							friend = graph.addVertex(fr);
-						} catch (IllegalArgumentException e) {
-							friend = graph.getVertex(fr);
-						}
-						String edge_id;
-						if (user.getId().toString().compareTo(friend.getId().toString()) > 0)
-							edge_id = user.getId().toString() + "-" + friend.getId().toString();
-						else
-							edge_id = friend.getId().toString() + "-" + user.getId().toString();
+						
+						if ( (new File (json_dir+fr+".json").exists() == true) ||
+						     (new File (json_dir+fr+"-DAU.json").exists() == true) ) {
 
-						try {
-							graph.addEdge(edge_id, user, friend,UserUtility.FRIEND);
-						} catch (IllegalArgumentException e) { /* do nothing */
+							Vertex friend;
+							try {
+								friend = graph.addVertex(fr);
+							} catch (IllegalArgumentException e) {
+								friend = graph.getVertex(fr);
+							}
+							
+							String edge_id;
+							if (user.getId().toString().compareTo(friend.getId().toString()) > 0)
+								edge_id = user.getId().toString() + "-" + friend.getId().toString();
+							else
+								edge_id = friend.getId().toString() + "-" + user.getId().toString();
+	
+							try {
+								graph.addEdge(edge_id, user, friend,UserUtility.FRIEND);
+							} catch (IllegalArgumentException e) { /* do nothing */ }
+						} else {						
+							if (debug)
+								System.out.println(fr + " doesn't have a corresponding json file. not inserted into the graph");
 						}
 					}
 				}
