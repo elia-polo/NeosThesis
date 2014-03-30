@@ -8,14 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import main.UserUtility;
+import metrics.UserStats;
+
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
-
-import main.UserUtility;
-import main.UsersGraph;
-import metrics.UserStats;
 
 public class DLFormatConverter  {
 

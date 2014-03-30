@@ -15,6 +15,7 @@ import utils.Util;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 
 public class NetClusConverter implements Converter {
@@ -29,6 +30,14 @@ public class NetClusConverter implements Converter {
 	static {
 		new File(asset_folder).mkdirs();
 	}
+	
+	private boolean fromIgraph = false;
+	
+	public NetClusConverter(boolean fromIgraph) {
+		this.fromIgraph = fromIgraph;
+	}
+	
+	
 	/**
 	 * Converts a UsersGraph into a dataset file suitable for the NetClus clustering algorithm:
 	 * <ul>
@@ -43,6 +52,11 @@ public class NetClusConverter implements Converter {
 	 * @param g The UsersGraph to be converted
 	 */
 	public void translate(UsersGraph g) {
+		translate(g.getGraph());
+	}
+	
+	@Override
+	public void translate(Graph g) {
 		long start_time = System.currentTimeMillis();
 		// Clear folder
 		for(File file: new File(asset_folder).listFiles()) file.delete();
@@ -63,13 +77,13 @@ public class NetClusConverter implements Converter {
 				BufferedWriter user2like = Files.newBufferedWriter(Paths.get(asset_folder+"user2like.txt"), StandardCharsets.UTF_8)) {
 			// For each graph node of type use, declare an entity
 			int user_id = -1, age_id = -1, hometown_id = -1, location_id = -1, relationship_id = -1, like_id = -1;
-			for (Vertex v : g.getGraph().getVertices(UserUtility.WHOAMI,"user")) {
+			for (Vertex v : g.getVertices(UserUtility.WHOAMI,"user")) {
 				// Insert user into users file
 				String s = String.valueOf(++user_id)+"\t"+v.getId().toString()+System.lineSeparator();
 				users.write(s);
 				// Insert user-birthday relation
 				String o = v.getProperty(UserUtility.BIRTHDAY);
-				if(o != null && !o.equals("null")) {
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					Integer user_age = new Integer(Util.getAge(o));
 					Integer age_remapped_id;
 					if((age_remapped_id = age_map.get(user_age)) == null) {
@@ -79,8 +93,8 @@ public class NetClusConverter implements Converter {
 					s = String.valueOf(user_id)+"\t"+age_remapped_id+System.lineSeparator();
 					user2birthday.write(s);
 				}
-				o = v.getProperty(UserUtility.HOMETOWN);
-				if(o != null && !o.equals("null")) {
+				o = v.getProperty(UserUtility.HOMETOWN_NAME);
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					Integer hometown_remapped_id;
 					if((hometown_remapped_id = hometown_map.get(o)) == null) {
 						hometown_map.put(o, ++hometown_id);
@@ -89,8 +103,8 @@ public class NetClusConverter implements Converter {
 					s = String.valueOf(user_id)+"\t"+hometown_remapped_id+System.lineSeparator();
 					user2hometown.write(s);
 				}
-				o = v.getProperty(UserUtility.LOCATION);
-				if(o != null && !o.equals("null")) {
+				o = v.getProperty(UserUtility.LOCATION_NAME);
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					Integer location_remapped_id;
 					if((location_remapped_id = location_map.get(o)) == null) {
 						location_map.put(o, ++location_id);
@@ -100,12 +114,16 @@ public class NetClusConverter implements Converter {
 					user2location.write(s);
 				}
 				o = v.getProperty(UserUtility.GENDER);
-				if(o != null && !o.equals("null")) {
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					s = String.valueOf(user_id)+"\t"+(o.equals("male")?String.valueOf(male):String.valueOf(female))+System.lineSeparator();
 					user2gender.write(s);
 				}
-				o = v.getProperty(UserUtility.INTERESTED_IN);
-				if(o != null && !o.equals("null")) {
+				if(fromIgraph) {
+					o = v.getProperty(UserUtility.INTERESTED_IN.replace("_", ""));
+				} else {
+					o = v.getProperty(UserUtility.INTERESTED_IN);
+				}
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					int interest_id;
 					if(o.equals("male")) {
 						interest_id = male;
@@ -117,8 +135,12 @@ public class NetClusConverter implements Converter {
 					s = String.valueOf(user_id)+"\t"+String.valueOf(interest_id)+System.lineSeparator();
 					user2interest.write(s);
 				}
-				o = v.getProperty(UserUtility.REL_STATUS);
-				if(o != null && !o.equals("null")) {
+				if(fromIgraph) {
+					o = v.getProperty(UserUtility.REL_STATUS.replace("_", ""));
+				} else {
+					o = v.getProperty(UserUtility.REL_STATUS);
+				}
+				if(o != null && !o.isEmpty() && !o.equals("null")) {
 					Integer relationship_remapped_id;
 					if((relationship_remapped_id = relationship_map.get(o)) == null) {
 						relationship_map.put(o, ++relationship_id);
@@ -127,17 +149,35 @@ public class NetClusConverter implements Converter {
 					s = String.valueOf(user_id)+"\t"+relationship_remapped_id+System.lineSeparator();
 					user2relationship.write(s);
 				}
-				o = v.getProperty(UserUtility.HIGH_SCHOOL);
+				if(fromIgraph) {
+//					o = v.getProperty(UserUtility.EDUCATION);
+//					if(o != null) {
+//						String[] vec = Util.fromXSV(o, ",");
+//						s = String.valueOf(user_id)+"\t"+vec[0]+System.lineSeparator()+String.valueOf(user_id)+"\t"+vec[1]+System.lineSeparator()+String.valueOf(user_id)+"\t"+vec[2]+System.lineSeparator();
+//						user2education.write(s);
+//					}
+					o = v.getProperty(UserUtility.HIGHSCHOOL.replace("_", ""));
+				} else {
+					o = v.getProperty(UserUtility.HIGHSCHOOL);
+				}
 				if(o != null) {
 					s = String.valueOf(user_id)+"\t"+String.valueOf(high_school)+System.lineSeparator();
 					user2education.write(s);
 				}
-				o = v.getProperty(UserUtility.COLLEGE);
+				if(fromIgraph) {
+					o = v.getProperty(UserUtility.COLLEGE.replace("_", ""));
+				} else {
+					o = v.getProperty(UserUtility.COLLEGE);
+				}
 				if(o != null) {
 					s = String.valueOf(user_id)+"\t"+String.valueOf(college)+System.lineSeparator();
 					user2education.write(s);
 				}
-				o = v.getProperty(UserUtility.GRADUATE_SCHOOL);
+				if(fromIgraph) {
+					o = v.getProperty(UserUtility.GRADUATESCHOOL.replace("_", ""));
+				} else {
+					o = v.getProperty(UserUtility.GRADUATESCHOOL);
+				}
 				if(o != null) {
 					s = String.valueOf(user_id)+"\t"+String.valueOf(graduate_school)+System.lineSeparator();
 					user2education.write(s);
@@ -229,6 +269,6 @@ public class NetClusConverter implements Converter {
 		}
 		// Finally delete empty files
 		for(File file: new File(asset_folder).listFiles()) if(file.length() == 0) {file.delete(); }
-		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");
+		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");		
 	}
 }

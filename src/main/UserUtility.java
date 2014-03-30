@@ -14,6 +14,16 @@ public class UserUtility {
 	public final static String LOCATION = "location";
 	public final static String HOMETOWN_NAME = "hometown_name";
 	public final static String LOCATION_NAME = "location_name";
+	public final static String HOMETOWN_LAT = "hometown_lat";
+	public final static String HOMETOWN_LNG = "hometown_lng";
+	public final static String HOMETOWN_COUNTY = "hometown_county";
+	public final static String HOMETOWN_STATE = "hometown_state";
+	public final static String HOMETOWN_COUNTRY = "hometown_country";
+	public final static String LOCATION_LAT = "location_lat";
+	public final static String LOCATION_LNG = "location_lng";
+	public final static String LOCATION_COUNTY = "location_county";
+	public final static String LOCATION_STATE = "location_state";
+	public final static String LOCATION_COUNTRY = "location_country";
 	public final static String NAME = "name";
 	public final static String FRIENDS = "friends";
 	public final static String FRIEND = "friend";
@@ -28,8 +38,11 @@ public class UserUtility {
 	public final static String HIGH_SCHOOL = "High School";
 	public final static String COLLEGE = "College";
 	public final static String GRADUATE_SCHOOL = "Graduate School";
+	public final static String HIGHSCHOOL = "High_School";
+	public final static String GRADUATESCHOOL = "Graduate_School";
 	public final static String WHOAMI = "whoami";
-	public final static String ISDAU = "is_dau";	
+	public final static String ISDAU = "is_dau";
+	
 	
 }
 

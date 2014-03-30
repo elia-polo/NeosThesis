@@ -18,6 +18,7 @@ import utils.Util;
 import com.google.code.geocoder.model.LatLng;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
 
 public class ELKIConverter implements Converter {
@@ -27,6 +28,12 @@ public class ELKIConverter implements Converter {
 		new File(asset_folder).mkdirs();
 	}
 	
+	
+	private boolean fromIgraph;
+	
+	public ELKIConverter(boolean fromIgraph) {
+		this.fromIgraph = fromIgraph;
+	}
 	/**
 	 * <p>Converts a graph to a format suitable for the ELKI knowledge data discovery framework.</p>
 	 * The output file is consistent with the format expected by the TermFrequencyParser class in ELKI<br>
@@ -49,15 +56,23 @@ public class ELKIConverter implements Converter {
 				if(s != null && !s.equals("null")) {
 					user_data.add("GENDER_"+s+" 1");
 				}
-				s = Util.getAge((String) v.getProperty(UserUtility.BIRTHDAY));
+				s = v.getProperty(UserUtility.BIRTHDAY);
 				if(s != null && !s.equals("null")) {
-					user_data.add("AGE "+s);
+					user_data.add("AGE "+Util.getAge(s));
 				}
-				s = v.getProperty(UserUtility.REL_STATUS);
+				if(fromIgraph) {
+					s = (String) v.getProperty(UserUtility.REL_STATUS);
+				} else {
+					s = (String) v.getProperty(UserUtility.REL_STATUS);
+				}
 				if(s != null && !s.equals("null")) {
 					user_data.add("RS_"+s+" 1");
 				}
-				s = v.getProperty(UserUtility.INTERESTED_IN);
+				if(fromIgraph) {
+					s = v.getProperty(UserUtility.INTERESTED_IN.replace("_", ""));
+				} else {
+					s = v.getProperty(UserUtility.INTERESTED_IN);
+				}
 				if(s != null && !s.equals("null")) {
 					user_data.add("INTERESTED_IN_"+s+" 1");
 				}
@@ -77,15 +92,27 @@ public class ELKIConverter implements Converter {
 						user_data.add("LOCATION_LONGITUDE "+coords.getLng());
 					}
 				}
-				s = v.getProperty(UserUtility.HIGH_SCHOOL);
+				if(fromIgraph) {
+					s = v.getProperty(UserUtility.HIGHSCHOOL.replace("_", ""));
+				} else {
+					s = v.getProperty(UserUtility.HIGHSCHOOL);
+				}
 				if(s != null && !s.equals("null")) {
 					user_data.add("HIGH_SCHOOL "+s);
 				}
-				s = v.getProperty(UserUtility.COLLEGE);
+				if(fromIgraph) {
+					s = v.getProperty(UserUtility.COLLEGE.replace("_", ""));
+				} else {
+					s = v.getProperty(UserUtility.COLLEGE);
+				}
 				if(s != null && !s.equals("null")) {
 					user_data.add("COLLEGE "+s);
 				}
-				s = v.getProperty(UserUtility.GRADUATE_SCHOOL);
+				if(fromIgraph) {
+					s = v.getProperty(UserUtility.GRADUATESCHOOL.replace("_", ""));
+				} else {
+					s = v.getProperty(UserUtility.GRADUATESCHOOL);
+				}
 				if(s != null && !s.equals("null")) {
 					user_data.add("GRADUATE_SCHOOL "+s);
 				}
@@ -122,6 +149,12 @@ public class ELKIConverter implements Converter {
 			e.printStackTrace();
 		}
 		System.out.println("Total running time: "+(System.currentTimeMillis() - start_time)+" ms");
+	}
+
+	@Override
+	public void translate(Graph g) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

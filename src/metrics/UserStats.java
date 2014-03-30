@@ -14,6 +14,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
 
@@ -21,6 +22,7 @@ import main.EEducation;
 import main.UserPuker;
 import main.UserUtility;
 import utils.Util;
+import utils.Util.GeocoderAddressComponentType;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -189,6 +191,15 @@ public class UserStats {
 				}
 			}
 		}
+		// Upper levels of education (College) imply lower levels (HighSchool)
+		for(int i=tmp.length-1; i>=0; --i) {
+			if(tmp[i].equals("1")) {
+				--i;
+				while(i>=0) {
+					tmp[i] = "1";
+				}
+			}
+		}
 		return tmp;
 	}
 	
@@ -200,27 +211,27 @@ public class UserStats {
 		}
 	}
 	
-	private static String getHometown(JsonValue jv) {
+	private static String[] getHometown(JsonValue jv) {
 		if(jv == null) {
 			return null;
 		} else {
-			return asString(jv.asObject().get(UserUtility.ID));
+			return new String[] {asString(jv.asObject().get(UserUtility.ID)), asString(jv.asObject().get(UserUtility.NAME)) };
 		}
 	}
 	
-	private static String getLocation(JsonValue jv) {
+	private static String[] getLocation(JsonValue jv) {
 		if(jv == null) {
 			return null;
 		} else {
-			return asString(jv.asObject().get(UserUtility.ID));
+			return new String[] {asString(jv.asObject().get(UserUtility.ID)), asString(jv.asObject().get(UserUtility.NAME)) };
 		}
 	}
 	
 	public static Graph loadFromJson() {
 		// Build graph from Json files
 		Graph graph = new TinkerGraph();
-		File[] files = new File("/home/np2k/Desktop/repository").listFiles();
-//		 File[] files = new File("./assets/json.debug").listFiles();
+//		File[] files = new File("/home/np2k/Desktop/repository").listFiles();
+		File[] files = new File("C:\\Programming\\Git\\json_users").listFiles();
 		for (File f : files) {
 			try (BufferedReader json = Files.newBufferedReader(f.toPath(),StandardCharsets.UTF_8)) {
 				JsonObject jsonObj = JsonObject.readFrom(json);
@@ -236,6 +247,7 @@ public class UserStats {
 					user = graph.getVertex(s);
 				}
 				user.setProperty(valid_user, true); // Only users associated to a file are kept
+				user.setProperty(UserUtility.WHOAMI, "user");
 				user.setProperty(UserUtility.ISDAU, f.getName().contains("DAU"));
 				s = asString(jsonObj.get(UserUtility.GENDER));
 				if (debug) {
@@ -272,27 +284,53 @@ public class UserStats {
 				if (s != null) {
 					user.setProperty(UserUtility.BIRTHDAY, s);
 				}
-				s = getHometown(jsonObj.get(UserUtility.HOMETOWN));
+				String vec[] = getHometown(jsonObj.get(UserUtility.HOMETOWN));
 				if (debug) {
-					System.out.println(UserUtility.HOMETOWN + " " + s);
+					System.out.println(UserUtility.HOMETOWN + " " + vec[1]);
 				}
 				if (s != null) {
-					user.setProperty(UserUtility.HOMETOWN, s);
+					user.setProperty(UserUtility.HOMETOWN, vec[0]);
+					user.setProperty(UserUtility.HOMETOWN_NAME, vec[1]);
+					// Set additional properties
+					try {
+						Map<String,Object> result = Util.getAddressStructure(vec[1]);
+						if(result != null) {
+							user.setProperty(UserUtility.HOMETOWN+"_"+GeocoderAddressComponentType.administrative_area_level_2, result.get(GeocoderAddressComponentType.administrative_area_level_2));
+							user.setProperty(UserUtility.HOMETOWN+"_"+GeocoderAddressComponentType.administrative_area_level_1, result.get(GeocoderAddressComponentType.administrative_area_level_1));
+							user.setProperty(UserUtility.HOMETOWN+"_"+GeocoderAddressComponentType.country, result.get(GeocoderAddressComponentType.country));
+						}
+					} catch(IllegalStateException e) {
+						System.err.println(e.getMessage());
+					}
 				}
-				s = getLocation(jsonObj.get(UserUtility.LOCATION));
+				vec = getLocation(jsonObj.get(UserUtility.LOCATION));
 				if (debug) {
-					System.out.println(UserUtility.LOCATION + " " + s);
+					System.out.println(UserUtility.LOCATION + " " + vec[1]);
 				}
 				if (s != null) {
-					user.setProperty(UserUtility.LOCATION, s);
+					user.setProperty(UserUtility.LOCATION, vec[0]);
+					user.setProperty(UserUtility.LOCATION_NAME, vec[1]);
+					// Set additional properties
+					try {
+						Map<String,Object> result = Util.getAddressStructure(vec[1]);
+						if(result != null) {
+							user.setProperty(UserUtility.LOCATION+"_"+GeocoderAddressComponentType.administrative_area_level_2, result.get(GeocoderAddressComponentType.administrative_area_level_2));
+							user.setProperty(UserUtility.LOCATION+"_"+GeocoderAddressComponentType.administrative_area_level_1, result.get(GeocoderAddressComponentType.administrative_area_level_1));
+							user.setProperty(UserUtility.LOCATION+"_"+GeocoderAddressComponentType.country, result.get(GeocoderAddressComponentType.country));
+						}
+					} catch(IllegalStateException e) {
+						System.err.println(e.getMessage());
+					}
 				}
-				s = Util.toXSV(getEduVec(UserPuker.parseEducationNoTryCatch(jsonObj)),",");
+				vec = getEduVec(UserPuker.parseEducationNoTryCatch(jsonObj));
 				if (debug) {
-					System.out.println(UserUtility.EDUCATION + " " + s);
+					System.out.println(UserUtility.HIGH_SCHOOL + " " + vec[0]);
+					System.out.println(UserUtility.COLLEGE + " " + vec[1]);
+					System.out.println(UserUtility.GRADUATE_SCHOOL + " " + vec[2]);
 				}
-				if (s != null) {
-					user.setProperty(UserUtility.EDUCATION, s);
-				}
+				user.setProperty(UserUtility.HIGHSCHOOL, vec[0]);
+				user.setProperty(UserUtility.COLLEGE, vec[1]);
+				user.setProperty(UserUtility.GRADUATESCHOOL, vec[2]);
 				// Add friends, node and edges
 				ArrayList<String> friends = UserPuker.parseFriends(jsonObj,(Boolean) user.getProperty(UserUtility.ISDAU));
 				if (friends != null) {
